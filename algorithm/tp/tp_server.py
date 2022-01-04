@@ -9,6 +9,7 @@ import time
 import logging
 import threading
 from datetime import datetime
+from multiprocessing.managers import SyncManager
 
 # Non-System
 from acsprism import RtdbAddress,RtdbPoint
@@ -32,6 +33,11 @@ logger = logging.getLogger(__name__)
 sys.setrecursionlimit(5000)
 
 __author__ = 'Wilson Kuo'
+
+
+class MyManager(SyncManager):
+    pass
+MyManager.register("syncdict")
 
 class Topology:
     def __init__(self, analysis_mode):
@@ -206,13 +212,14 @@ class Topology:
                 inNEWCOLOREQUIPMENTDICT[outageequipmentufid] = 0
 
 
-        print("{0} retrace is done".format(source.ufid))
+        print("{0} retrace is done".format(source.name))
 
         
     def job1(self):
         starttime = datetime.now()
-        for source in self.sourcelist:
-            logger.info('START AT {0}'.format(source.ufid))
+        len_sourcelist = len(self.sourcelist)
+        for idx, source in enumerate(self.sourcelist):
+            logger.info('START AT {0} {1}/{2}'.format(source.name, idx + 1, len_sourcelist))
             self.trace(source.ufid, source.tonodeid, source.ufid)
         endtime = datetime.now()
         logger.info(endtime - starttime)
@@ -262,6 +269,12 @@ class Topology:
                         print("change point not in dasdb")
 
             time.sleep(0.001)
+    
+    def get_equipmentdict(self):
+        tmp_dict = dict()
+        for equipmentufid, equipment in self.equipmentdict.items():
+            tmp_dict[equipment.name] = [self.sourcedict[sourceufid].name for sourceufid in equipment.sourceufiddict.keys()]
+        return tmp_dict
 
     def start(self):
         """                                                                                """
@@ -275,7 +288,10 @@ class Topology:
         getchanges.start()
         firsttrace.join()
         
-        
+        MyManager.register("syncdict", self.get_equipmentdict)
+        manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
+        manager.start()
+
         while True:
             pre_changeequipmentsourcecntdict = dict()
             len_changeequipmentlist          = len(self.changeequipmentlist)
@@ -317,6 +333,7 @@ class Topology:
 
 
                 self.changeequipmentlist = self.changeequipmentlist[len_changeequipmentlist : None]
+                MyManager.register("syncdict", self.get_equipmentdict)
 
             time.sleep(self.retrace_rate)
     
