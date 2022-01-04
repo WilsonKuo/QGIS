@@ -333,7 +333,6 @@ class Topology:
 
 
                 self.changeequipmentlist = self.changeequipmentlist[len_changeequipmentlist : None]
-                MyManager.register("syncdict", self.get_equipmentdict)
 
             time.sleep(self.retrace_rate)
     
