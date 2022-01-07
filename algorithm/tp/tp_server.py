@@ -288,9 +288,11 @@ class Topology:
         getchanges.start()
         firsttrace.join()
         
+        # first sync, update everytime when len(self.changeequipmentlist) is greater than 0
         MyManager.register("syncdict", self.get_equipmentdict)
         manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
         manager.start()
+
 
         while True:
             pre_changeequipmentsourcecntdict = dict()
@@ -333,6 +335,9 @@ class Topology:
 
 
                 self.changeequipmentlist = self.changeequipmentlist[len_changeequipmentlist : None]
+                # regen manager after self.equipmentdict is updated
+                manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
+                manager.start()
 
             time.sleep(self.retrace_rate)
     
