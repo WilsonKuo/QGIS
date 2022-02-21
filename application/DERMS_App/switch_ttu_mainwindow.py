@@ -1,0 +1,206 @@
+#!/bin/python3.6
+
+from __future__ import absolute_import
+
+import os
+import sys
+import time
+import threading
+from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import QSettings
+
+from radiobutton import RadioButton
+from acsprism import rtdb_init
+from ttuinfo import TTUInfo
+from mw import Ui_MainWindow
+from tables import TTU_TABLE_SCHEMA as TABLE
+from acstw.OracleInterface import OracleInterface
+from acsprism import rtdb_init
+ORACLE_USER     = os.getenv('ORACLE_USER','XXX')
+ORACLE_PW       = os.getenv('ORACLE_PW','XXX')
+ORACLE_DBSTRING = os.getenv('ORACLE_DBSTRING','XXX')
+PRISMdb = OracleInterface(ORACLE_USER, ORACLE_PW, ORACLE_DBSTRING)
+
+
+#B6228DB5132S01
+__author__ = 'Wilson Kuo'
+
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, switch_name, device):
+        super(MainWindow, self).__init__()
+        self.switch_name = switch_name
+        self.device = device
+        self.ui = Ui_MainWindow()
+        self.ui.setupUi(self)
+        ##ui setting
+        self.ui.resulttableWidget.doubleClicked.connect(self.opendisplay)
+        self.ui.resultlineEdit.textChanged.connect(self.data_to_gui)
+        self.ui.conditiontable.setText(self.switch_name)
+        self.ui.resulttable.setText("TTU")
+        self.ui.settings = QSettings('Wilson','SWITCH_TTU')
+        print(self.ui.settings.fileName())
+        self.setWindowTitle('SWITCH_TTU')
+
+
+    # def _on_refresh(self):
+    #     self.dataChanged.emit(
+    #         self.index(0, 0),
+    #         self.index(self.rowCount() - 1, self.columnCount() - 1))
+
+
+
+
+        
+        try:
+            self.resize(self.ui.settings.value('window size'))
+            self.move(self.ui.settings.value('window position'))
+        except:
+            pass
+        
+        self.ttuinfoSet = list()
+        for record in TABLE.get_ttu_info(self.switch_name).resultSet:
+            self.ttuinfoSet.append(TTUInfo(record))
+
+        self.flag2codebook = {None: 'No flag', 0: 'Normal', 1: 'Steal'}
+        self.flag3codebook = {None: 'No flag', 0: 'Normal', 1: 'Comm Off'}            
+        self.flag4codebook = {None: 'No flag', 0: 'Normal', 1: 'Oper Off'}            
+
+        self.existfile = list()
+        for f in os.listdir("/home/acs/DB/SCREEN"):
+            if 'BKG' in f:
+                self.existfile.append(f)
+        
+        self.ttudisplaynumberdict = dict()
+        for ttu in self.ttuinfoSet:
+            self.ttudisplaynumberdict[ttu.name] = ttu.display_number
+        self.tablecolumns = ['TTU_NAME', 'DISPLAY_NUMBER', 'P', 'Q', 'I', 'V', 'CAPACITY', 'USAGE_RATE', 'FLAG1', 'FLAG2', 'FLAG3', 'FLAG4']
+        #self.tablecolumns = ['TTU_NAME', 'DISPLAY_NUMBER', 'P', 'Q', 'V', 'CAPACITY', 'USAGE_RATE', 'FLAG1', 'FLAG2', 'FLAG3', 'FLAG4']
+        self.ui.resulttableWidget.setColumnCount(len(self.tablecolumns))
+        self.ui.resulttableWidget.setHorizontalHeaderLabels(self.tablecolumns)
+        self.data_to_gui()
+
+        self.interval = 5
+        self.run = True
+        self.thread = threading.Thread(target = self.update_resultSet)
+        self.thread.start()
+
+    def update_resultSet(self):
+        tmp_interval = self.interval
+        while self.run:
+            tmp_interval -= 1
+            if tmp_interval == 0:
+                # print('no need to update resultSet')
+                # self.resultSet = TABLE.get_ttu_data(self.switch_name).resultSet
+                # self.ttuinfoSet *= 0
+                # for record in self.resultSet:
+                #     self.ttuinfoSet.append(TTUInfo(record))
+                # print('update gui')
+                self.data_to_gui()
+                tmp_interval = self.interval
+            time.sleep(1)
+    def data_to_gui(self):
+        #1. QtWidgets.QTableWidgetItem(xxx) xxx must be string!
+        #2. couldn't define setTextAlignment(QtCore.Qt.AlignCenter)) directly
+        
+        newresultSet = list()
+        if len(self.ui.resultlineEdit.text()) == 0:
+            for ttu in self.ttuinfoSet:
+                newresultSet.append(ttu)
+        else:
+            for ttu in self.ttuinfoSet:
+                if self.ui.resultlineEdit.text().upper() in ttu.name:
+                    newresultSet.append(ttu)
+
+        self.ui.resulttableWidget.setRowCount(len(newresultSet))
+        for row, ttu in enumerate(newresultSet):
+            item_name = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.name)))
+            item_name.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.ui.resulttableWidget.setItem(row, 0, item_name)
+            self.ui.resulttableWidget.setColumnWidth(0,200)
+        
+            item_display_number = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.display_number)))
+            item_display_number.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.ui.resulttableWidget.setItem(row, 1, item_display_number)
+            self.ui.resulttableWidget.setColumnWidth(1,150)
+
+            item_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.p)))
+            item_p.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_p.setToolTip(ttu.addrstring_p)
+            self.ui.resulttableWidget.setItem(row, 2, item_p)
+
+            item_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.q)))
+            item_q.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_q.setToolTip(ttu.addrstring_q)
+            self.ui.resulttableWidget.setItem(row, 3, item_q)
+
+            item_i = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.i)))
+            item_i.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_i.setToolTip(ttu.addrstring_i)
+            self.ui.resulttableWidget.setItem(row, 4, item_i)
+
+            item_v = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.v)))
+            item_v.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_v.setToolTip(ttu.addrstring_v)
+            self.ui.resulttableWidget.setItem(row, 5, item_v)
+
+            item_capacity = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.capacity)))
+            item_capacity.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.ui.resulttableWidget.setItem(row, 6, item_capacity)
+
+            item_usage_rate = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.usage_rate)))
+            item_usage_rate.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.ui.resulttableWidget.setItem(row, 7, item_usage_rate)
+
+            #QtCore.Qt.DecorationRole
+            # item_flag1 = RadioButton(ttu.flag1).widgets
+            # self.ui.resulttableWidget.setCellWidget(row, 8, item_flag1)
+            item_flag1 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.flag1)))
+            item_flag1.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_flag1.setToolTip(ttu.addrstring_flag1)
+            self.ui.resulttableWidget.setItem(row, 8, item_flag1)
+
+            # item_flag2 = RadioButton(ttu.flag2).widgets
+            # self.ui.resulttableWidget.setCellWidget(row, 9, item_flag2)
+            item_flag2 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(self.flag2codebook[ttu.flag2]))
+            item_flag2.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_flag2.setToolTip(ttu.addrstring_flag2)
+            self.ui.resulttableWidget.setItem(row, 9, item_flag2)
+
+            # item_flag3 = RadioButton(ttu.flag3).widgets
+            # self.ui.resulttableWidget.setCellWidget(row, 10, item_flag3)
+            item_flag3 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(self.flag3codebook[ttu.flag3]))
+            item_flag3.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_flag3.setToolTip(ttu.addrstring_flag3)
+            self.ui.resulttableWidget.setItem(row, 10, item_flag3)
+
+            # item_flag4 = RadioButton(ttu.flag4).widgets
+            # self.ui.resulttableWidget.setCellWidget(row, 10, item_flag4)
+            item_flag4 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(self.flag4codebook[ttu.flag4]))
+            item_flag4.setTextAlignment(QtCore.Qt.AlignCenter)
+            item_flag4.setToolTip(ttu.addrstring_flag4)
+            self.ui.resulttableWidget.setItem(row, 11, item_flag4)
+
+            if 'BKG' + str(self.ttudisplaynumberdict[ttu.name]) + '.M' in self.existfile:
+                for col in range(0,2):
+                    self.ui.resulttableWidget.item(row, col).setBackground(QtGui.QColor(100,100,150))
+
+    def opendisplay(self):
+        current_display = self.ttudisplaynumberdict[str(self.ui.resulttableWidget.item(self.ui.resulttableWidget.currentRow(),0).text())]
+        #os.system('oiint {} -c display -fwin {}'.format(sys.argv[1], current_display))
+        os.system('oiint {} -c display -fwin {}'.format(self.device, current_display))
+
+    def closeEvent(self, event):
+        print('Save setting')
+        self.ui.settings.setValue('window size', self.size())
+        self.ui.settings.setValue('window position', self.pos())
+        self.run = False
+
+def main():
+    rtdb_init()
+    app = QtWidgets.QApplication(sys.argv)
+    ui = MainWindow()
+    ui.show()
+    sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()

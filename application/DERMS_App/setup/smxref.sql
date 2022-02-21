@@ -1,0 +1,13 @@
+DROP TABLE SMXREF;
+CREATE TABLE SMXREF
+(
+    TABLENAME         VARCHAR2(19) NOT NULL,
+    EQUIP_NUM         VARCHAR2(19) NOT NULL,
+    COLNAME           VARCHAR2(19) NOT NULL,
+    RTDBTYPE          NUMBER(5),
+    STATION           NUMBER(5),
+    CATEGORY          CHAR(1),
+    POINT             NUMBER(5),
+    ATTRIBUTE         CHAR(2)
+);
+EXIT;
