@@ -88,7 +88,7 @@ class MeterInfo(object, metaclass = NewInitCaller):
         if self.p_lockflag1:
             return self.p_lockflag1.read_attr(self.attribute_lockflag1)
         else:
-            return None
+            return 0
     @lockflag1.setter
     def lockflag1(self, value):
         if self.p_lockflag1:
@@ -120,7 +120,7 @@ class MeterInfo(object, metaclass = NewInitCaller):
         if self.p_lockflag2:
             return self.p_lockflag2.read_attr(self.attribute_lockflag2)
         else:
-            return None
+            return 0
     @lockflag2.setter
     def lockflag2(self, value):
         if self.p_lockflag2:

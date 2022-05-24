@@ -78,6 +78,14 @@ def main():
             ttu_meterinfoDict[ttu_name].append(meterinfoDict[meter_name])
     print('Finish Creating Dictionary (TTU_METERINFODICT)')
 
+    #Create ttu_metercnt Dictionary
+    print('Start Creating Dictionary (TTU_METERINFODICT)')
+    ttu_metercnt = dict()
+    for ttu_name in ttu_meterinfoDict.keys():
+        ttu_metercnt[ttu_name] = len(ttu_meterinfoDict[ttu_name])
+
+    print('Finish Creating Dictionary (TTU_METERCNT)')
+
     #Initializing rtdb before starting program
     print('Start Initializing Meter Value')
     for val in meterinfoDict.values():
@@ -169,20 +177,28 @@ def main():
                         if tmp_waiting_rtdb_update_time == 0:
                             sys.stdout.write('\rUpdate TTU LOCKFLAG3 or LOCKFLAG4 or AMPA in {0} second(s)'.format(tmp_waiting_rtdb_update_time))
                             sys.stdout.flush()
-                            print('\nUpdate  TTU LOCKFLAG3 or LOCKFLAG4 or AMPA!')
+                            print('\nUpdate TTU LOCKFLAG3 or LOCKFLAG4 or AMPA!')
                             # Check calculated point later, otherwise
                             # If writing meter lockflag1 and lockflag2, and then read rtdb immediately,
                             # might not read the changing value, ttu flag3 and flag4 will not be correct
                             for key in unionCheck_lockflag1.keys():
-                                if reduce(lambda x, y: x*y, (meter.lockflag2 for meter in ttu_meterinfoDict[key])) == 0:
-                                    ttuinfoDict[key].flag3 = 1
+                                cnt = (reduce(lambda x, y: x + y, (meter.lockflag1 for meter in ttu_meterinfoDict[key]))) / 2
+                                if cnt == ttu_metercnt[ttu_name]:
+                                    print('All Meter Got communication problem at TTU:{} downstream'.format(key))
+                                    ttuinfoDict[key].flag3 = 2
+                                elif cnt < ttu_metercnt[ttu_name] and cnt > 0:
                                     print('Some Meter Got communication problem at TTU:{} downstream'.format(key))
+                                    ttuinfoDict[key].flag3 = 1
                                 else:
                                     ttuinfoDict[key].flag3 = 0
                             for key in unionCheck_lockflag2.keys():
-                                if reduce(lambda x, y: x*y, (meter.lockflag2 for meter in ttu_meterinfoDict[key])) == 0:
-                                    ttuinfoDict[key].flag4 = 1
+                                cnt = (reduce(lambda x, y: x + y, (meter.lockflag2 for meter in ttu_meterinfoDict[key]))) / 2
+                                if cnt == ttu_metercnt[ttu_name]:
+                                    print('All Meter In Stock at TTU:{} downstream'.format(key))
+                                    ttuinfoDict[key].flag4 = 2
+                                elif cnt < ttu_metercnt[ttu_name] and cnt > 0:
                                     print('Some Meter In Stock at TTU:{} downstream'.format(key))
+                                    ttuinfoDict[key].flag4 = 1
                                 else:
                                     ttuinfoDict[key].flag4 = 0
                             for key in unionCheck_i.keys():

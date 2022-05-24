@@ -63,6 +63,7 @@ class TTU_TABLE_SCHEMA:
     @classmethod
     def get_ttu_info(cls, ttu_name = None):
         columns  = ['TTU_NAME', 'DISPLAY_NUMBER', 'CAPACITY']
+        columns += ['STATION_LINE', 'CATEGORY_LINE', 'POINT_LINE', 'RTDBTYPE_LINE', 'ATTRIBUTE_LINE']
         columns += ['STATION_P', 'CATEGORY_P', 'POINT_P', 'RTDBTYPE_P', 'ATTRIBUTE_P']   
         columns += ['STATION_Q', 'CATEGORY_Q', 'POINT_Q', 'RTDBTYPE_Q', 'ATTRIBUTE_Q']   
         columns += ['STATION_I', 'CATEGORY_I', 'POINT_I', 'RTDBTYPE_I', 'ATTRIBUTE_I']
@@ -79,6 +80,17 @@ class TTU_TABLE_SCHEMA:
         result  = PRISMdb.ExecQuery(query)
         resultSet = [ dict(zip(columns, row)) for row in result ]
         return cls(columns, resultSet)
+
+
+
+    @classmethod
+    def get_colorcode(cls):
+        columns  = ['COLORCODE', 'NAME']
+        query = """SELECT {0} FROM FEEDERPARAM""".format(",".join(columns))
+        result  = PRISMdb.ExecQuery(query)
+        resultSet = [ dict(zip(columns, row)) for row in result ]
+        return cls(columns, resultSet)
+
 
 
 

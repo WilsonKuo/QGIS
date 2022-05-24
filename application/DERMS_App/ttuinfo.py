@@ -15,6 +15,11 @@ class TTUInfo(object, metaclass = NewInitCaller):
     
     def new_init(self):
         try:
+            self.addr_line = RtdbAddress(self.station_line, self.category_line, self.point_line, self.rtdbtype_line)
+            self.p_line = RtdbPoint(self.addr_line)
+        except:
+            self.p_line = None
+        try:
             self.addr_p = RtdbAddress(self.station_p, self.category_p, self.point_p, self.rtdbtype_p)
             self.p_p = RtdbPoint(self.addr_p)
         except:
@@ -65,6 +70,7 @@ class TTUInfo(object, metaclass = NewInitCaller):
     @property
     def name(self):
         return self.dataSet['TTU_NAME']
+        
     @property
     def display_number(self):
         if self.dataSet['DISPLAY_NUMBER']:
@@ -74,6 +80,35 @@ class TTUInfo(object, metaclass = NewInitCaller):
     @property
     def capacity(self):
         return self.dataSet['CAPACITY']
+
+
+    @property
+    def station_line(self):
+        return self.dataSet['STATION_LINE']
+    @property
+    def category_line(self):
+        return self.dataSet['CATEGORY_LINE']
+    @property
+    def point_line(self):
+        return self.dataSet['POINT_LINE']
+    @property
+    def rtdbtype_line(self):
+        return self.dataSet['RTDBTYPE_LINE']
+    @property
+    def attribute_line(self):
+        return self.dataSet['ATTRIBUTE_LINE']
+    @property
+    def addrstring_line(self):
+        try:
+            return ",".join([str(value) for value in self.addr_line.as_tuple()])
+        except:
+            return None
+    @property
+    def feeder(self):
+        if self.p_line:
+            return self.p_line.read_attr(self.attribute_line)
+        else:
+            return None
 
     @property
     def station_p(self):
