@@ -1,0 +1,7 @@
+DROP TABLE LOADHDA;
+CREATE TABLE LOADHDA (
+    COLORCODE NUMBER(6),
+    P         NUMBER,
+    Q         NUMBER,
+    TIME      NUMBER(6)
+);
