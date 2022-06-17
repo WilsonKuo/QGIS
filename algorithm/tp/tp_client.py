@@ -12,4 +12,5 @@ if __name__ == "__main__":
     manager.connect()
     syncdict = manager.syncdict()
     for key, value in syncdict.items():
-        print(key, value)
+        if key == "N0711CA94J2":
+            print(key, value)

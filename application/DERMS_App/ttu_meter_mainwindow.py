@@ -10,14 +10,7 @@ from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import QSettings
 
 from mw import Ui_MainWindow
-from acsprism import rtdb_init
-from meterinfo import MeterInfo
 from tables import TTU_TABLE_SCHEMA as TABLE
-from acstw.OracleInterface import OracleInterface
-ORACLE_USER     = os.getenv('ORACLE_USER','XXX')
-ORACLE_PW       = os.getenv('ORACLE_PW','XXX')
-ORACLE_DBSTRING = os.getenv('ORACLE_DBSTRING','XXX')
-PRISMdb = OracleInterface(ORACLE_USER, ORACLE_PW, ORACLE_DBSTRING)
 
 
 __author__ = 'Wilson Kuo'
@@ -44,8 +37,8 @@ class MainWindow(QtWidgets.QMainWindow):
             pass
 
         self.meterInfoSet = list()
-        for record in TABLE.get_meter_info(self.ttu_name).resultSet:
-            self.meterInfoSet.append(MeterInfo(record))
+        for record in TABLE.get_meter_data(self.ttu_name).resultSet:
+            self.meterInfoSet.append(record)
         
         self.lockflag1codebook = {None: 'Online', 0: 'Offline', 1: 'Online'}
         self.lockflag2codebook = {None: 'No Data', 0: 'Stock', 1: 'Installed', 2: 'Running'}
@@ -67,15 +60,18 @@ class MainWindow(QtWidgets.QMainWindow):
         while self.run:
             tmp_interval -= 1
             if tmp_interval == 0:
+                sys.stdout.write('\rRefresh Table in {0} second(s)'.format(tmp_interval))
+                sys.stdout.flush()
                 # print('no need to update resultSet')
-                # self.meterInfoSet *= 0
-                # for record in TABLE.get_meter_info(self.ttu_name).resultSet:
-                #     self.meterInfoSet.append(MeterInfo(record))
-                # print('update gui')
+                self.meterInfoSet *= 0
+                for record in TABLE.get_meter_data(self.ttu_name).resultSet:
+                    self.meterInfoSet.append(record)
                 self.data_to_gui()
+                print('\nRefresh Table Successfully')
                 tmp_interval = self.interval
             time.sleep(1)
-
+            sys.stdout.write('\rRefresh Table in {0} second(s)'.format(tmp_interval))
+            sys.stdout.flush()
     def data_to_gui(self):
         #1. QtWidgets.QTableWidgetItem(xxx) xxx must be string!
         #2. couldn't define setTextAlignment(QtCore.Qt.AlignCenter)) directly
@@ -85,12 +81,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 newresultSet.append(meter)
         else:
             for meter in self.meterInfoSet:
-                if self.ui.resultlineEdit.text() in meter.name:
+                if self.ui.resultlineEdit.text() in meter['METER_NAME']:
                     newresultSet.append(meter)
 
         self.ui.resulttableWidget.setRowCount(len(newresultSet))
         for row, meter in enumerate(newresultSet):
-            item_name = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter.name)))
+            item_name = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str( meter['METER_NAME'])))
             item_name.setTextAlignment(QtCore.Qt.AlignCenter)
             self.ui.resulttableWidget.setItem(row, 0, item_name)
             self.ui.resulttableWidget.setColumnWidth(0, 130)
@@ -100,30 +96,26 @@ class MainWindow(QtWidgets.QMainWindow):
             # item_lockflag1.setToolTip(meter.addrstring_lockflag1)
             # self.ui.resulttableWidget.setItem(row, 1, item_lockflag1)
             
-            item_lockflag2 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.lockflag2codebook[meter.lockflag2])))
+            item_lockflag2 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.lockflag2codebook[meter['LOCKFLAG2']])))
             item_lockflag2.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_lockflag2.setToolTip(meter.addrstring_lockflag2)
             self.ui.resulttableWidget.setItem(row, 2 - 1, item_lockflag2)
             self.ui.resulttableWidget.setColumnWidth(2 - 1, 180)
 
-            item_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter.p)))
+            item_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter['PA'])))
             item_p.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_p.setToolTip(meter.addrstring_p)
             self.ui.resulttableWidget.setItem(row, 3 - 1, item_p)
 
-            item_v = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter.v)))
-            item_v.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_v.setToolTip(meter.addrstring_v)
-            self.ui.resulttableWidget.setItem(row, 4 - 1, item_v)
+            # item_v = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter.v)))
+            # item_v.setTextAlignment(QtCore.Qt.AlignCenter)
+            # item_v.setToolTip(meter.addrstring_v)
+            # self.ui.resulttableWidget.setItem(row, 4 - 1, item_v)
 
-            item_i = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(round(meter.i, 3))))
+            item_i = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(round(meter['AMPA'], 3))))
             item_i.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_i.setToolTip(meter.addrstring_i)
             self.ui.resulttableWidget.setItem(row, 5 - 1, item_i)
 
-            item_eflag = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.eflagcodebook[meter.eflag])))
+            item_eflag = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.eflagcodebook[meter['EFLAG']])))
             item_eflag.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_eflag.setToolTip(meter.addrstring_eflag)
             self.ui.resulttableWidget.setItem(row, 6 - 1, item_eflag)
             self.ui.resulttableWidget.setColumnWidth(6 - 1, 200)
 

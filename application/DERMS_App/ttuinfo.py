@@ -136,7 +136,7 @@ class TTUInfo(object, metaclass = NewInitCaller):
         if self.p_p:
             return round(self.p_p.read_attr(self.attribute_p), 6)
         else:
-            return None
+            return 0
 
     @property
     def station_q(self):
@@ -164,7 +164,7 @@ class TTUInfo(object, metaclass = NewInitCaller):
         if self.p_q:
             return self.p_q.read_attr(self.attribute_q)
         else:
-            return None
+            return 0
 
     @property
     def station_i(self):
@@ -192,7 +192,7 @@ class TTUInfo(object, metaclass = NewInitCaller):
         if self.p_i:
             return self.p_i.read_attr(self.attribute_i)
         else:
-            return None
+            return 0
     @i.setter
     def i(self, value):
         if self.p_i:
@@ -224,8 +224,6 @@ class TTUInfo(object, metaclass = NewInitCaller):
     def v(self):
         if self.p_v:
             return self.p_v.read_attr(self.attribute_v)
-        else:
-            return None
             
     @property
     def usage_rate(self):

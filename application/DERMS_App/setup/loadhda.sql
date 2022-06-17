@@ -5,3 +5,5 @@ CREATE TABLE LOADHDA (
     Q         NUMBER,
     TIME      NUMBER(6)
 );
+
+EXIT;

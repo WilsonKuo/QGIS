@@ -21,6 +21,7 @@ class Equipment(object, metaclass = NewInitCaller):
         
         self.sourceufiddict = dict()
         self.parentufiddict = dict()
+        self.nonlineparentufiddict = dict()
     def new_init(self):
         try:
             self.addr_stastatus = RtdbAddress(self.station, self.category, self.point, self.rtdbtype)
@@ -34,6 +35,9 @@ class Equipment(object, metaclass = NewInitCaller):
     @property
     def ufid(self):
         return self.data['UFID']
+    @property
+    def fsc(self):
+        return self.data['FSC']
     @property
     def name(self):
         return self.data['NAME']
@@ -87,4 +91,3 @@ class Equipment(object, metaclass = NewInitCaller):
             else:
                 self.__colorcode = value
 
-            

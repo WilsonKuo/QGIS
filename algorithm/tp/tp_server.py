@@ -9,7 +9,7 @@ import time
 import logging
 import threading
 from datetime import datetime
-from multiprocessing.managers import SyncManager
+# from multiprocessing.managers import SyncManager
 
 # Non-System
 from acsprism import RtdbAddress,RtdbPoint
@@ -35,16 +35,16 @@ sys.setrecursionlimit(5000)
 __author__ = 'Wilson Kuo'
 
 
-class MyManager(SyncManager):
-    pass
-MyManager.register("syncdict")
+# class MyManager(SyncManager):
+#     pass
+# MyManager.register("syncdict")
 
 class Topology:
     def __init__(self, analysis_mode):
 
         self.analysis_mode = analysis_mode
         print("analysis_mode = {0}".format(self.analysis_mode))
-        self.retrace_rate   = 0.5 # s
+        self.retrace_rate   = 5 # s
         print("retrace_rate  = {0}".format(self.retrace_rate))
         logger.info("START INITIALIZING DASDB")
         # sources = [{'UFID': 1,  'FRNODEID': 0  , 'TONODEID': 100, 'STATION': 100, 'CATEGORY': 'R', 'POINT': 1, 'RTDBTYPE': 1},
@@ -71,13 +71,13 @@ class Topology:
         #         {'UFID': 21, 'FRNODEID': 111, 'TONODEID': 132, 'STATION': 100, 'CATEGORY': 'R', 'POINT': 3, 'RTDBTYPE': 2}
         #         ]
 
-        columns  = ["UFID", "FRNODEID", "TONODEID", "NAME", "COLORCODE"]
+        columns  = ["UFID", "FRNODEID", "TONODEID", "FSC", "NAME", "COLORCODE"]
         columns += ["STATION", "CATEGORY", "POINT", "RTDBTYPE", "ATTRIBUTE" ]
         query   = "SELECT {0} FROM  TESTTABLE WHERE NAME IN (SELECT BRKNAME FROM FEEDER WHERE FDTYPE = 0) AND FSC = 108".format(",".join(columns))
         sources = PRISMdb.ExecQuery(query)
         sources = [ dict(zip(columns, row)) for row in sources ]
         
-        columns  = ["UFID", "FRNODEID", "TONODEID", "NAME"]
+        columns  = ["UFID", "FRNODEID", "TONODEID", "FSC", "NAME"]
         columns += ["STATION", "CATEGORY", "POINT", "RTDBTYPE", "ATTRIBUTE" ]
         query   = "SELECT {0} FROM  TESTTABLE  WHERE NAME NOT IN (SELECT BRKNAME FROM FEEDER WHERE FDTYPE = 0)".format(",".join(columns))
         equipments = PRISMdb.ExecQuery(query)
@@ -87,6 +87,7 @@ class Topology:
         self.sourcelist          = list()
         self.sourcedict          = dict()
         self.nodeiddict          = dict()
+        self.ufid_to_namedict            = dict()
         self.address_to_ufid     = dict()
         
         
@@ -107,6 +108,7 @@ class Topology:
 
         for source in sources:
             sourceufid = source['UFID']
+            self.ufid_to_namedict[source['UFID']] = source['NAME']
             self.sourcelist.append(Equipment(source, self.analysis_mode))
             self.sourcedict[sourceufid] = Equipment(source, self.analysis_mode)
             self.sourceinlooparea[sourceufid] = dict()
@@ -119,6 +121,7 @@ class Topology:
             point    = equipment['POINT'] 
             rtdbtype = equipment['RTDBTYPE']
             equipmentufid  = equipment['UFID']
+            self.ufid_to_namedict[equipment['UFID']] = equipment['NAME']
             if frnodeid not in self.nodeiddict.keys():
                 self.nodeiddict[frnodeid] = list()
             if tonodeid not in self.nodeiddict.keys():
@@ -143,14 +146,13 @@ class Topology:
         if inSOURCEUFID not in self.equipmentinlooparea[inEQUIPMENT.ufid].keys():
             self.equipmentinlooparea[inEQUIPMENT.ufid][inSOURCEUFID] = True
 
-
         if inEQUIPMENT.ufid != inVISITEDUFID:
             if inSOURCEUFID != inEQUIPMENT.parentufiddict[inSOURCEUFID]:
                 self.inloop(self.equipmentdict[inEQUIPMENT.parentufiddict[inSOURCEUFID]], inSOURCEUFID, inVISITEDUFID)
 
 
     # Recursive
-    def trace(self, inEQUIPMENTUFID, inNODEID, inSOURCEUFID):
+    def trace(self, inEQUIPMENTUFID, inNODEID, inSOURCEUFID, inNONLINEUFID):
         if inNODEID in self.nodeiddict.keys():
             for equipmentufid, fromto in self.nodeiddict[inNODEID]:
                 equipment = self.equipmentdict[equipmentufid]
@@ -165,16 +167,19 @@ class Topology:
                             self.sourcedownstream[source.ufid] = set()
                         self.sourcedownstream[source.ufid].add(equipmentufid)
                         equipment.parentufiddict[source.ufid] = inEQUIPMENTUFID
+                        equipment.nonlineparentufiddict[source.ufid] = inNONLINEUFID
                         equipment.sourceufiddict[source.ufid] = True
                         if equipment.stastatus == 1:
                             if equipment.frnodeid == 0 or equipment.tonodeid == 0:
                                 # meet load or capacitor
                                 pass
                             else:
+                                if equipment.fsc in (108, 114):
+                                    inNONLINEUFID = equipment.ufid
                                 if fromto == 0:
-                                    self.trace(equipmentufid, equipment.tonodeid, source.ufid)
+                                    self.trace(equipmentufid, equipment.tonodeid, source.ufid, inNONLINEUFID)
                                 else:
-                                    self.trace(equipmentufid, equipment.frnodeid, source.ufid)
+                                    self.trace(equipmentufid, equipment.frnodeid, source.ufid, inNONLINEUFID)
                     else:
                         ###################prevent back trace at source
                         if inEQUIPMENTUFID != source.ufid:
@@ -191,6 +196,7 @@ class Topology:
             equipment = self.equipmentdict[downstreamequipmentufid]
             del self.visiteddict[downstreamequipmentufid][source.ufid]
             del equipment.parentufiddict[source.ufid]
+            del equipment.nonlineparentufiddict[source.ufid]
             del equipment.sourceufiddict[source.ufid]
             if inSOURCEUFID in self.sourceinlooparea[source.ufid].keys():
                 if downstreamequipmentufid in self.sourceinlooparea[source.ufid].keys():
@@ -201,7 +207,7 @@ class Topology:
 
 
         self.sourcedownstream[source.ufid] = set()
-        self.trace(source.ufid, source.tonodeid, source.ufid)
+        self.trace(source.ufid, source.tonodeid, source.ufid, source.ufid)
 
         for nonoutageequipmentufid in self.sourcedownstream[source.ufid]:
             equipment = self.equipmentdict[nonoutageequipmentufid]
@@ -214,13 +220,53 @@ class Topology:
 
         print("{0} retrace is done".format(source.name))
 
+    def import_tp_result_to_db(self, import_mode):
+        if import_mode == "INC":
+            #  ORA-01795: maximum number of expressions in a list is 1000
+            # repeat = 1
+            # tempList = []
+            # for key in readytoupdatelist:
+            #     for i in range(0, len(readytoupdatelist[key]), 1000):
+            #         for j in range(i, 1000*repeat):
+            #             if j+1 <= len(readytoupdatelist[key]):
+            #                 tempList.append(readytoupdatelist[key][j])
+            #                 query = "UPDATE TB_TP SET OKCZXLKCXZ;LCK WHERE UFID IN ({0})".format(",".join(tempList))
+            #                 PRISMdb.ExecNonQuery(query)
+            #         tempList = []
+            #         repeat += 1
+            pass
+
+        else:
+            query = "TRUNCATE TABLE TB_TP"
+            PRISMdb.ExecNonQuery(query)
         
+
+            tmp_arr = list()
+
+            for equipmentufid in self.equipmentdict:
+                equipment = self.equipmentdict[equipmentufid]
+                arr = [(self.ufid_to_namedict[sourceufid], self.ufid_to_namedict[equipment.nonlineparentufiddict[sourceufid]], self.ufid_to_namedict[equipment.parentufiddict[sourceufid]]) for sourceufid in equipment.sourceufiddict]
+                arr_size = len(arr)
+                if arr_size > 1:
+                    tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, arr[0][0], arr[0][1], arr[0][2], arr[1][0], arr[1][1], arr[1][2]])
+                elif arr_size == 1:
+                    tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, arr[0][0], arr[0][1], arr[0][2], None, None, None])
+                else:
+                    tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, None, None, None, None, None, None])
+            colStr = 'UFID,FSC,NAME,STATUS,FEEDER1,FEEDER1_NONLINEPARENT,FEEDER1_PARENT,FEEDER2,FEEDER2_NONLINEPARENT,FEEDER2_PARENT'
+            valPlaceholder = ":0,:1,:2,:3,:4,:5,:6,:7,:8,:9"
+            insSql = "insert /* array */ into %s (%s) values (%s)" % ('TB_TP', colStr, valPlaceholder)
+            PRISMdb.InsertArray(insSql,tmp_arr)
+            print('\nInsert data successfully!')
+    
+
+
     def job1(self):
         starttime = datetime.now()
         len_sourcelist = len(self.sourcelist)
         for idx, source in enumerate(self.sourcelist):
             logger.info('START AT {0} {1}/{2}'.format(source.name, idx + 1, len_sourcelist))
-            self.trace(source.ufid, source.tonodeid, source.ufid)
+            self.trace(source.ufid, source.tonodeid, source.ufid, source.ufid)
         endtime = datetime.now()
         logger.info(endtime - starttime)
         logger.info("first trace is done")
@@ -237,18 +283,20 @@ class Topology:
         for loop in loopset:
             print("between loop :{0}".format(loop))
 
-        for sourceufid, downstreamequipmentufid in self.sourcedownstream.items():
-            for equipmentufid in downstreamequipmentufid:
-                equipment = self.equipmentdict[equipmentufid]
-                source    = self.sourcedict[sourceufid]
-                if equipment.colorcode == 0:
-                    """ write rtdb will slow down trace process, so I batch write the colorcode"""
-                    """ colorize correctly??,  need to check """
-                    equipment.colorcode = source.colorcodebook
-        
+        # for sourceufid, downstreamequipmentufid in self.sourcedownstream.items():
+        #     for equipmentufid in downstreamequipmentufid:
+        #         equipment = self.equipmentdict[equipmentufid]
+        #         source    = self.sourcedict[sourceufid]
+        #         if equipment.colorcode == 0:
+        #             """ write rtdb will slow down trace process, so I batch write the colorcode"""
+        #             """ colorize correctly??,  need to check """
+        #             equipment.colorcode = source.colorcodebook
+
+        self.import_tp_result_to_db("BULK")
+
         endtime2 = datetime.now()
         logger.info(endtime2 - endtime)
-        logger.info("colorize is done")
+        # logger.info("colorize is done")
     
     def job2(self):
         print("Start Detecting RTDB change...")
@@ -270,11 +318,11 @@ class Topology:
 
             time.sleep(0.001)
     
-    def get_equipmentdict(self):
-        tmp_dict = dict()
-        for equipmentufid, equipment in self.equipmentdict.items():
-            tmp_dict[equipment.name] = [self.sourcedict[sourceufid].name for sourceufid in equipment.sourceufiddict.keys()]
-        return tmp_dict
+    # def get_equipmentdict(self):
+    #     tmp_dict = dict()
+    #     for equipmentufid, equipment in self.equipmentdict.items():
+    #         tmp_dict[equipment.name] = [self.sourcedict[sourceufid].name for sourceufid in equipment.sourceufiddict.keys()]
+    #     return tmp_dict
 
     def start(self):
         """                                                                                """
@@ -288,16 +336,20 @@ class Topology:
         getchanges.start()
         firsttrace.join()
         
+
+        # print(self.equipmentdict)
         # first sync, update everytime when len(self.changeequipmentlist) is greater than 0
-        MyManager.register("syncdict", self.get_equipmentdict)
-        manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
-        manager.start()
+        # MyManager.register("syncdict", self.get_equipmentdict)
+        # manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
+        # manager.start()
 
 
         while True:
+            print("--->>>TpFunc Print: Count: 0 <<<---")
             pre_changeequipmentsourcecntdict = dict()
             len_changeequipmentlist          = len(self.changeequipmentlist)
-            if len(self.changeequipmentlist):
+            if len_changeequipmentlist:
+                print("--->>>TpFunc Print: Count: {0} <<<---".format(len_changeequipmentlist))
                 # 1
                 newcolorequipmentdict = dict()
                 retracesourceufidlist = set()
@@ -308,10 +360,12 @@ class Topology:
                         pre_changeequipmentsourcecntdict[changeequipment.ufid] += 1
                 for retracesourceufid in retracesourceufidlist:
                     self.retrace(retracesourceufid, newcolorequipmentdict)
-                
+
                 for equipmentufid, colorcodebook in newcolorequipmentdict.items():
                     equipment = self.equipmentdict[equipmentufid]
                     equipment.colorcode = colorcodebook
+
+                self.import_tp_result_to_db("BULK")
 
                 # 2
                 self.openswitchdict  = dict()
@@ -336,8 +390,8 @@ class Topology:
 
                 self.changeequipmentlist = self.changeequipmentlist[len_changeequipmentlist : None]
                 # regen manager after self.equipmentdict is updated
-                manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
-                manager.start()
+                # manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
+                # manager.start()
 
             time.sleep(self.retrace_rate)
     
@@ -358,7 +412,7 @@ def main():
     from logger import setup_logger
     setup_logger()
     rtdb_init()
-    tp = Topology(analysis_mode=1)
+    tp = Topology(analysis_mode = 0)
     tp.start()
     tp.stop()
 

@@ -14,12 +14,10 @@ from acsprism import rtdb_init
 from ttuinfo import TTUInfo
 from mw import Ui_MainWindow
 from tables import TTU_TABLE_SCHEMA as TABLE
+from ttu_meter_mainwindow import MainWindow as MeterMainWindow
 from acstw.OracleInterface import OracleInterface
 from acsprism import rtdb_init
-ORACLE_USER     = os.getenv('ORACLE_USER','XXX')
-ORACLE_PW       = os.getenv('ORACLE_PW','XXX')
-ORACLE_DBSTRING = os.getenv('ORACLE_DBSTRING','XXX')
-PRISMdb = OracleInterface(ORACLE_USER, ORACLE_PW, ORACLE_DBSTRING)
+
 
 
 #B6228DB5132S01
@@ -33,7 +31,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         ##ui setting
-        self.ui.resulttableWidget.doubleClicked.connect(self.opendisplay)
+        #self.ui.resulttableWidget.doubleClicked.connect(self.opendisplay)
         self.ui.resultlineEdit.textChanged.connect(self.data_to_gui)
         self.ui.conditiontable.setText(self.switch_name)
         self.ui.resulttable.setText("TTU")
@@ -183,11 +181,28 @@ class MainWindow(QtWidgets.QMainWindow):
             if 'BKG' + str(self.ttudisplaynumberdict[ttu.name]) + '.M' in self.existfile:
                 for col in range(0,2):
                     self.ui.resulttableWidget.item(row, col).setBackground(QtGui.QColor(100,100,150))
+    
+    def contextMenuEvent(self, event):
+        if self.ui.resulttableWidget.selectionModel().selection().indexes():
+            for i in self.ui.resulttableWidget.selectionModel().selection().indexes():
+                row, column = i.row(), i.column()
+            menu = QtWidgets.QMenu()
+            meterAction = menu.addAction("METER")
+            oiAction = menu.addAction("TTU DISPLAY")
+            action = menu.exec_(self.mapToGlobal(event.pos()))
+            ttu_name = self.ui.resulttableWidget.item(row,0).text()
+            if action == meterAction:
+                ui = MeterMainWindow(self.device, ttu_name)
+                ui.show()
+            elif action== oiAction:
+                current_display = self.ttudisplaynumberdict[ttu_name]
+                #os.system('oiint {} -c display -fwin {}'.format(sys.argv[1], current_display))
+                os.system('oiint {} -c display -fwin {}'.format(self.device, current_display))
 
-    def opendisplay(self):
-        current_display = self.ttudisplaynumberdict[str(self.ui.resulttableWidget.item(self.ui.resulttableWidget.currentRow(),0).text())]
-        #os.system('oiint {} -c display -fwin {}'.format(sys.argv[1], current_display))
-        os.system('oiint {} -c display -fwin {}'.format(self.device, current_display))
+    # def opendisplay(self):
+    #     current_display = self.ttudisplaynumberdict[str(self.ui.resulttableWidget.item(self.ui.resulttableWidget.currentRow(),0).text())]
+    #     #os.system('oiint {} -c display -fwin {}'.format(sys.argv[1], current_display))
+    #     os.system('oiint {} -c display -fwin {}'.format(self.device, current_display))
 
     def closeEvent(self, event):
         print('Save setting')
