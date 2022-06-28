@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 # TNS  = os.getenv("ORACLE_DBSTRING_BASEDB")
 # MAPdb = OracleInterface(USER, PSWD, TNS)
 
-# print(sys.getrecursionlimit())
+# logger.info(sys.getrecursionlimit())
 sys.setrecursionlimit(5000)
 
 __author__ = 'Wilson Kuo'
@@ -43,9 +43,9 @@ class Topology:
     def __init__(self, analysis_mode):
 
         self.analysis_mode = analysis_mode
-        print("analysis_mode = {0}".format(self.analysis_mode))
-        self.retrace_rate   = 5 # s
-        print("retrace_rate  = {0}".format(self.retrace_rate))
+        logger.info("analysis_mode = {0}".format(self.analysis_mode))
+        self.retrace_rate   = 1 # s
+        logger.info("retrace_rate  = {0}".format(self.retrace_rate))
         logger.info("START INITIALIZING DASDB")
         # sources = [{'UFID': 1,  'FRNODEID': 0  , 'TONODEID': 100, 'STATION': 100, 'CATEGORY': 'R', 'POINT': 1, 'RTDBTYPE': 1},
         #         {'UFID': 2,  'FRNODEID': 0  , 'TONODEID': 200, 'STATION': 100, 'CATEGORY': 'R', 'POINT': 2, 'RTDBTYPE': 1}
@@ -73,7 +73,7 @@ class Topology:
 
         columns  = ["UFID", "FRNODEID", "TONODEID", "FSC", "NAME", "COLORCODE"]
         columns += ["STATION", "CATEGORY", "POINT", "RTDBTYPE", "ATTRIBUTE" ]
-        query   = "SELECT {0} FROM  TESTTABLE WHERE NAME IN (SELECT BRKNAME FROM FEEDER WHERE FDTYPE = 0) AND FSC = 108".format(",".join(columns))
+        query   = "SELECT {0} FROM  TESTTABLE WHERE NAME IN (SELECT BRKNAME FROM FEEDER WHERE FDTYPE = 0) AND FSC = 108 ORDER BY NAME".format(",".join(columns))
         sources = PRISMdb.ExecQuery(query)
         sources = [ dict(zip(columns, row)) for row in sources ]
         
@@ -87,7 +87,7 @@ class Topology:
         self.sourcelist          = list()
         self.sourcedict          = dict()
         self.nodeiddict          = dict()
-        self.ufid_to_namedict            = dict()
+        self.ufid_to_namedict    = dict()
         self.address_to_ufid     = dict()
         
         
@@ -108,11 +108,17 @@ class Topology:
 
         for source in sources:
             sourceufid = source['UFID']
+            station    = source['STATION' ]
+            category   = source['CATEGORY']
+            point      = source['POINT'] 
+            rtdbtype   = source['RTDBTYPE']
             self.ufid_to_namedict[source['UFID']] = source['NAME']
             self.sourcelist.append(Equipment(source, self.analysis_mode))
             self.sourcedict[sourceufid] = Equipment(source, self.analysis_mode)
             self.sourceinlooparea[sourceufid] = dict()
             self.sourcedownstream[sourceufid] = set()
+            self.sourcedict[sourceufid].sourceufiddict[sourceufid] = True
+            self.address_to_ufid[(station, category, point, rtdbtype)] = sourceufid
         for equipment in equipments:
             frnodeid = equipment['FRNODEID']
             tonodeid = equipment['TONODEID']
@@ -186,7 +192,7 @@ class Topology:
                             self.inloop(self.equipmentdict[inEQUIPMENTUFID], source.ufid, equipmentufid)
 
             # else:
-            #     print("back trace")
+            #     logger.info("back trace")
 
     def retrace(self, inSOURCEUFID, inNEWCOLOREQUIPMENTDICT):
         # init
@@ -204,10 +210,16 @@ class Topology:
             if downstreamequipmentufid in self.equipmentinlooparea.keys():
                 if source.ufid in self.equipmentinlooparea[downstreamequipmentufid].keys():
                     del self.equipmentinlooparea[downstreamequipmentufid][inSOURCEUFID]
+                    if len(self.equipmentinlooparea[downstreamequipmentufid]) == 0:
+                        del self.equipmentinlooparea[downstreamequipmentufid]
+                        # print(f"remove {downstreamequipmentufid} from equipmentinlooparea")
 
 
         self.sourcedownstream[source.ufid] = set()
-        self.trace(source.ufid, source.tonodeid, source.ufid, source.ufid)
+        if source.stastatus == 1:
+            self.trace(source.ufid, source.tonodeid, source.ufid, source.ufid)
+        else:
+            logger.info(f"{source.name} source open, ignore!")
 
         for nonoutageequipmentufid in self.sourcedownstream[source.ufid]:
             equipment = self.equipmentdict[nonoutageequipmentufid]
@@ -218,46 +230,56 @@ class Topology:
                 inNEWCOLOREQUIPMENTDICT[outageequipmentufid] = 0
 
 
-        print("{0} retrace is done".format(source.name))
+        logger.info("{0} retrace is done".format(source.name))
 
-    def import_tp_result_to_db(self, import_mode):
+    def import_tp_result_to_db(self, import_mode, readytoupdatelist):
+        
+        tmp_arr = list()
+        
         if import_mode == "INC":
-            #  ORA-01795: maximum number of expressions in a list is 1000
-            # repeat = 1
-            # tempList = []
-            # for key in readytoupdatelist:
-            #     for i in range(0, len(readytoupdatelist[key]), 1000):
-            #         for j in range(i, 1000*repeat):
-            #             if j+1 <= len(readytoupdatelist[key]):
-            #                 tempList.append(readytoupdatelist[key][j])
-            #                 query = "UPDATE TB_TP SET OKCZXLKCXZ;LCK WHERE UFID IN ({0})".format(",".join(tempList))
-            #                 PRISMdb.ExecNonQuery(query)
-            #         tempList = []
-            #         repeat += 1
-            pass
+            ###ORA-01795: maximum number of expressions in a list is 1000
+            repeat = 1
+            tempList = []
+            for i in range(0, len(readytoupdatelist), 1000):
+                for j in range(i, 1000*repeat):
+                    if j+1 <= len(readytoupdatelist):
+                        tempList.append(str(readytoupdatelist[j]))
+                query = "DELETE TB_TP WHERE UFID IN ({0})".format(",".join(tempList))
+                PRISMdb.ExecNonQuery(query)
+                tempList = []
+                repeat += 1
 
         else:
             query = "TRUNCATE TABLE TB_TP"
             PRISMdb.ExecNonQuery(query)
-        
-
-            tmp_arr = list()
-
-            for equipmentufid in self.equipmentdict:
-                equipment = self.equipmentdict[equipmentufid]
-                arr = [(self.ufid_to_namedict[sourceufid], self.ufid_to_namedict[equipment.nonlineparentufiddict[sourceufid]], self.ufid_to_namedict[equipment.parentufiddict[sourceufid]]) for sourceufid in equipment.sourceufiddict]
-                arr_size = len(arr)
-                if arr_size > 1:
-                    tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, arr[0][0], arr[0][1], arr[0][2], arr[1][0], arr[1][1], arr[1][2]])
-                elif arr_size == 1:
-                    tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, arr[0][0], arr[0][1], arr[0][2], None, None, None])
+            
+        for equipmentufid in readytoupdatelist:
+            equipment = self.equipmentdict[equipmentufid]
+            arr = [(self.ufid_to_namedict[sourceufid], self.ufid_to_namedict[equipment.nonlineparentufiddict[sourceufid]], self.ufid_to_namedict[equipment.parentufiddict[sourceufid]]) for sourceufid in equipment.sourceufiddict]
+            arr_size = len(arr)
+            #####################################################################
+            # flag = -1:outage, 0:normal, 1:normal open, 2:inloop, 3:betweenloop#
+            #####################################################################
+            if arr_size > 1:
+                if equipment.ufid in self.equipmentbetweenlooparea.keys():
+                    flag = 3
                 else:
-                    tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, None, None, None, None, None, None])
-            colStr = 'UFID,FSC,NAME,STATUS,FEEDER1,FEEDER1_NONLINEPARENT,FEEDER1_PARENT,FEEDER2,FEEDER2_NONLINEPARENT,FEEDER2_PARENT'
-            valPlaceholder = ":0,:1,:2,:3,:4,:5,:6,:7,:8,:9"
-            insSql = "insert /* array */ into %s (%s) values (%s)" % ('TB_TP', colStr, valPlaceholder)
-            PRISMdb.InsertArray(insSql,tmp_arr)
-            print('\nInsert data successfully!')
+                    flag = 1
+                tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, arr[0][0], arr[0][1], arr[0][2], arr[1][0], arr[1][1], arr[1][2], flag])
+            elif arr_size == 1:
+                if equipment.ufid in self.equipmentinlooparea.keys():
+                    flag = 2
+                else:
+                    flag = 0
+                tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, arr[0][0], arr[0][1], arr[0][2], None, None, None, flag])
+            else:
+                flag = -1
+                tmp_arr.append([equipment.ufid, equipment.fsc, equipment.name, equipment.stastatus, None, None, None, None, None, None, flag])
+        colStr = 'UFID,FSC,NAME,STATUS,FEEDER1,FEEDER1_NONLINEPARENT,FEEDER1_PARENT,FEEDER2,FEEDER2_NONLINEPARENT,FEEDER2_PARENT,FLAG'
+        valPlaceholder = ":0,:1,:2,:3,:4,:5,:6,:7,:8,:9,:10"
+        insSql = "insert /* array */ into %s (%s) values (%s)" % ('TB_TP', colStr, valPlaceholder)
+        PRISMdb.InsertArray(insSql,tmp_arr)
+        logger.info(f'{import_mode} Insert data successfully!')
     
 
 
@@ -266,7 +288,10 @@ class Topology:
         len_sourcelist = len(self.sourcelist)
         for idx, source in enumerate(self.sourcelist):
             logger.info('START AT {0} {1}/{2}'.format(source.name, idx + 1, len_sourcelist))
-            self.trace(source.ufid, source.tonodeid, source.ufid, source.ufid)
+            if source.stastatus == 1:
+                self.trace(source.ufid, source.tonodeid, source.ufid, source.ufid)
+            else:
+                logger.info(f"{source.name} source open, ignore!")
         endtime = datetime.now()
         logger.info(endtime - starttime)
         logger.info("first trace is done")
@@ -281,7 +306,7 @@ class Topology:
                     self.betweenlooparea.append((equipmentufid, self.visiteddict[equipmentufid]))
                     self.equipmentbetweenlooparea[equipmentufid] = self.visiteddict[equipmentufid]
         for loop in loopset:
-            print("between loop :{0}".format(loop))
+            logger.info("between loop :{0}".format(loop))
 
         # for sourceufid, downstreamequipmentufid in self.sourcedownstream.items():
         #     for equipmentufid in downstreamequipmentufid:
@@ -292,14 +317,14 @@ class Topology:
         #             """ colorize correctly??,  need to check """
         #             equipment.colorcode = source.colorcodebook
 
-        self.import_tp_result_to_db("BULK")
+        self.import_tp_result_to_db("BULK", list(self.equipmentdict.keys()))
 
         endtime2 = datetime.now()
         logger.info(endtime2 - endtime)
         # logger.info("colorize is done")
     
     def job2(self):
-        print("Start Detecting RTDB change...")
+        logger.info("Start Detecting RTDB change...")
         detect_change = GetChanges()
         update_rate = 5000 # ms
         tmp_update_rate = update_rate
@@ -311,18 +336,16 @@ class Topology:
             if message:
                 if message.attr_code == 128:
                     if message.address_tuple in self.address_to_ufid.keys():
-                        self.changeequipmentlist.append(self.equipmentdict[self.address_to_ufid[message.address_tuple]])
+                        if self.address_to_ufid[message.address_tuple] in self.equipmentdict.keys():
+                            self.changeequipmentlist.append(self.equipmentdict[self.address_to_ufid[message.address_tuple]])
+                        else:
+                            self.changeequipmentlist.append(self.sourcedict[self.address_to_ufid[message.address_tuple]])
                     else:
-                        print(message.address_tuple)
-                        print("change point not in dasdb")
+                        logger.info(message.address_tuple)
+                        logger.info("change point not in dasdb")
 
             time.sleep(0.001)
     
-    # def get_equipmentdict(self):
-    #     tmp_dict = dict()
-    #     for equipmentufid, equipment in self.equipmentdict.items():
-    #         tmp_dict[equipment.name] = [self.sourcedict[sourceufid].name for sourceufid in equipment.sourceufiddict.keys()]
-    #     return tmp_dict
 
     def start(self):
         """                                                                                """
@@ -337,19 +360,13 @@ class Topology:
         firsttrace.join()
         
 
-        # print(self.equipmentdict)
-        # first sync, update everytime when len(self.changeequipmentlist) is greater than 0
-        # MyManager.register("syncdict", self.get_equipmentdict)
-        # manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
-        # manager.start()
-
 
         while True:
-            print("--->>>TpFunc Print: Count: 0 <<<---")
+            logger.info("--->>>TpFunc Print: Count: 0 <<<---")
             pre_changeequipmentsourcecntdict = dict()
             len_changeequipmentlist          = len(self.changeequipmentlist)
             if len_changeequipmentlist:
-                print("--->>>TpFunc Print: Count: {0} <<<---".format(len_changeequipmentlist))
+                logger.info("--->>>TpFunc Print: Count: {0} <<<---".format(len_changeequipmentlist))
                 # 1
                 newcolorequipmentdict = dict()
                 retracesourceufidlist = set()
@@ -361,11 +378,10 @@ class Topology:
                 for retracesourceufid in retracesourceufidlist:
                     self.retrace(retracesourceufid, newcolorequipmentdict)
 
-                for equipmentufid, colorcodebook in newcolorequipmentdict.items():
-                    equipment = self.equipmentdict[equipmentufid]
-                    equipment.colorcode = colorcodebook
+                # for equipmentufid, colorcodebook in newcolorequipmentdict.items():
+                #     equipment = self.equipmentdict[equipmentufid]
+                #     equipment.colorcode = colorcodebook
 
-                self.import_tp_result_to_db("BULK")
 
                 # 2
                 self.openswitchdict  = dict()
@@ -383,27 +399,30 @@ class Topology:
                     new_changeequipmentsourcecnt = len(changeequipment.sourceufiddict)
                     changeequipmentstastatus    = changeequipment.stastatus
                     if pre_changeequipmentsourcecntdict[changeequipment.ufid] > 1 and new_changeequipmentsourcecnt <= 2 and changeequipmentstastatus != 1:
-                        print("{0} break the loop".format(changeequipment.ufid))
+                        logger.info("{0} break the loop".format(changeequipment.ufid))
                     elif pre_changeequipmentsourcecntdict[changeequipment.ufid] >= 1 and new_changeequipmentsourcecnt > 1 and changeequipmentstastatus == 1:
-                        print("{0} cause the loop".format(changeequipment.ufid))
+                        logger.info("{0} cause the loop".format(changeequipment.ufid))
 
 
                 self.changeequipmentlist = self.changeequipmentlist[len_changeequipmentlist : None]
-                # regen manager after self.equipmentdict is updated
-                # manager = MyManager(("127.0.0.1", 5000), authkey=b'abc')
-                # manager.start()
+
+                if len_changeequipmentlist < 10:
+                    self.import_tp_result_to_db("INC", list(newcolorequipmentdict.keys()))
+                else:
+                    self.import_tp_result_to_db("BULK", list(self.equipmentdict.keys()))
+
 
             time.sleep(self.retrace_rate)
     
     def stop(self):
         logger.info("WITHIN LOOP")
-        # print(self.sourceinlooparea)
-        # print(self.equipmentinlooparea)
-        # print("BETWEEN LOOP")
-        # print(self.betweenlooparea)
-        # print("OPEN SWITCH")
-        # print(len(self.openswitchdict))
-        # print(len(self.visiteddict))
+        # logger.info(self.sourceinlooparea)
+        # logger.info(self.equipmentinlooparea)
+        # logger.info("BETWEEN LOOP")
+        # logger.info(self.betweenlooparea)
+        # logger.info("OPEN SWITCH")
+        # logger.info(len(self.openswitchdict))
+        # logger.info(len(self.visiteddict))
 
         
 

@@ -30,4 +30,4 @@ create table tb_tp
     feeder2_nonlineparent varchar2(19),
     feeder2_parent varchar2(19)
 );
-create index tb_tp_ufid_idx on tb_tp
+create index tb_tp_ufid_idx on tb_tp (ufid);
