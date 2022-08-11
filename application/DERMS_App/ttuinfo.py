@@ -14,32 +14,38 @@ class TTUInfo(object, metaclass = NewInitCaller):
         self.dataSet = dataSet
     
     def new_init(self):
-        try:
-            self.addr_line = RtdbAddress(self.station_line, self.category_line, self.point_line, self.rtdbtype_line)
-            self.p_line = RtdbPoint(self.addr_line)
-        except:
-            self.p_line = None
-        try:
-            self.addr_p = RtdbAddress(self.station_p, self.category_p, self.point_p, self.rtdbtype_p)
-            self.p_p = RtdbPoint(self.addr_p)
-        except:
-            self.p_p = None
-        try:
-            self.addr_q = RtdbAddress(self.station_q, self.category_q, self.point_q, self.rtdbtype_q)
-            self.p_q = RtdbPoint(self.addr_q)
-        except:
-            self.p_q = None
-        try:
-            self.addr_i = RtdbAddress(self.station_i, self.category_i, self.point_i, self.rtdbtype_i)
-            self.p_i = RtdbPoint(self.addr_i)
-        except:
-            self.p_i = None
-        try:
-            self.addr_v = RtdbAddress(self.station_v, self.category_v, self.point_v, self.rtdbtype_v)
-            self.p_v = RtdbPoint(self.addr_v)
-        except:
-            self.p_v = None
 
+        try:
+            self.addr_pa = RtdbAddress(self.station_pa, self.category_pa, self.point_pa, self.rtdbtype_pa)
+            self.p_pa = RtdbPoint(self.addr_pa)
+        except:
+            self.p_pa = None
+        try:
+            self.addr_pb = RtdbAddress(self.station_pb, self.category_pb, self.point_pb, self.rtdbtype_pb)
+            self.p_pb = RtdbPoint(self.addr_pb)
+        except:
+            self.p_pb = None
+        try:
+            self.addr_pc = RtdbAddress(self.station_pc, self.category_pc, self.point_pc, self.rtdbtype_pc)
+            self.p_pc = RtdbPoint(self.addr_pc)
+        except:
+            self.p_pc = None
+        try:
+            self.addr_qa = RtdbAddress(self.station_qa, self.category_qa, self.point_qa, self.rtdbtype_qa)
+            self.p_qa = RtdbPoint(self.addr_qa)
+        except:
+            self.p_qa = None
+        try:
+            self.addr_qb = RtdbAddress(self.station_qb, self.category_qb, self.point_qb, self.rtdbtype_qb)
+            self.p_qb = RtdbPoint(self.addr_qb)
+        except:
+            self.p_qb = None
+        try:
+            self.addr_qc = RtdbAddress(self.station_qc, self.category_qc, self.point_qc, self.rtdbtype_qc)
+            self.p_qc = RtdbPoint(self.addr_qc)
+        except:
+            self.p_qc = None
+            
         try:
             self.addr_flag1 = RtdbAddress(self.station_flag1, self.category_flag1, self.point_flag1, self.rtdbtype_flag1)
             self.p_flag1 = RtdbPoint(self.addr_flag1)
@@ -81,158 +87,222 @@ class TTUInfo(object, metaclass = NewInitCaller):
     def capacity(self):
         return self.dataSet['CAPACITY']
 
-
     @property
-    def station_line(self):
-        return self.dataSet['STATION_LINE']
+    def station_pa(self):
+        return self.dataSet['STATION_PA']
     @property
-    def category_line(self):
-        return self.dataSet['CATEGORY_LINE']
+    def category_pa(self):
+        return self.dataSet['CATEGORY_PA']
     @property
-    def point_line(self):
-        return self.dataSet['POINT_LINE']
+    def point_pa(self):
+        return self.dataSet['POINT_PA']
     @property
-    def rtdbtype_line(self):
-        return self.dataSet['RTDBTYPE_LINE']
+    def rtdbtype_pa(self):
+        return self.dataSet['RTDBTYPE_PA']
     @property
-    def attribute_line(self):
-        return self.dataSet['ATTRIBUTE_LINE']
+    def attribute_pa(self):
+        return self.dataSet['ATTRIBUTE_PA']
     @property
-    def addrstring_line(self):
+    def addrstring_pa(self):
         try:
-            return ",".join([str(value) for value in self.addr_line.as_tuple()])
+            return ",".join([str(value) for value in self.addr_pa.as_tuple()])
         except:
-            return None
+            return ''
     @property
-    def feeder(self):
-        if self.p_line:
-            return self.p_line.read_attr(self.attribute_line)
-        else:
-            return None
-
-    @property
-    def station_p(self):
-        return self.dataSet['STATION_P']
-    @property
-    def category_p(self):
-        return self.dataSet['CATEGORY_P']
-    @property
-    def point_p(self):
-        return self.dataSet['POINT_P']
-    @property
-    def rtdbtype_p(self):
-        return self.dataSet['RTDBTYPE_P']
-    @property
-    def attribute_p(self):
-        return self.dataSet['ATTRIBUTE_P']
-    @property
-    def addrstring_p(self):
-        try:
-            return ",".join([str(value) for value in self.addr_p.as_tuple()])
-        except:
-            return None
-    @property
-    def p(self):
-        if self.p_p:
-            return round(self.p_p.read_attr(self.attribute_p), 6)
+    def pa(self):
+        if self.p_pa:
+            return round(self.p_pa.read_attr(self.attribute_pa), 6)
         else:
             return 0
 
     @property
-    def station_q(self):
-        return self.dataSet['STATION_Q']
+    def station_pb(self):
+        return self.dataSet['STATION_PB']
     @property
-    def category_q(self):
-        return self.dataSet['CATEGORY_Q']
+    def category_pb(self):
+        return self.dataSet['CATEGORY_PB']
     @property
-    def point_q(self):
-        return self.dataSet['POINT_Q']
+    def point_pb(self):
+        return self.dataSet['POINT_PB']
     @property
-    def rtdbtype_q(self):
-        return self.dataSet['RTDBTYPE_Q']
+    def rtdbtype_pb(self):
+        return self.dataSet['RTDBTYPE_PB']
     @property
-    def attribute_q(self):
-        return self.dataSet['ATTRIBUTE_Q']
+    def attribute_pb(self):
+        return self.dataSet['ATTRIBUTE_PB']
     @property
-    def addrstring_q(self):
+    def addrstring_pb(self):
         try:
-            return ",".join([str(value) for value in self.addr_q.as_tuple()])
+            return ",".join([str(value) for value in self.addr_pb.as_tuple()])
         except:
-            return None
+            return ''
     @property
-    def q(self):
-        if self.p_q:
-            return self.p_q.read_attr(self.attribute_q)
+    def pb(self):
+        if self.p_pb:
+            return round(self.p_pb.read_attr(self.attribute_pb), 6)
         else:
             return 0
 
     @property
-    def station_i(self):
-        return self.dataSet['STATION_I']
+    def station_pc(self):
+        return self.dataSet['STATION_PC']
     @property
-    def category_i(self):
-        return self.dataSet['CATEGORY_I']
+    def category_pc(self):
+        return self.dataSet['CATEGORY_PC']
     @property
-    def point_i(self):
-        return self.dataSet['POINT_I']
+    def point_pc(self):
+        return self.dataSet['POINT_PC']
     @property
-    def rtdbtype_i(self):
-        return self.dataSet['RTDBTYPE_I']
+    def rtdbtype_pc(self):
+        return self.dataSet['RTDBTYPE_PC']
     @property
-    def attribute_i(self):
-        return self.dataSet['ATTRIBUTE_I']
+    def attribute_pc(self):
+        return self.dataSet['ATTRIBUTE_PC']
     @property
-    def addrstring_i(self):
+    def addrstring_pc(self):
         try:
-            return ",".join([str(value) for value in self.addr_i.as_tuple()])
+            return ",".join([str(value) for value in self.addr_pc.as_tuple()])
         except:
-            return None
+            return ''
     @property
-    def i(self):
-        if self.p_i:
-            return self.p_i.read_attr(self.attribute_i)
+    def pc(self):
+        if self.p_pc:
+            return round(self.p_pc.read_attr(self.attribute_pc), 6)
         else:
             return 0
-    @i.setter
-    def i(self, value):
-        if self.p_i:
-            print('?')
-            self.p_i.write_attr(self.attribute_i, value)
 
     @property
-    def station_v(self):
-        return self.dataSet['STATION_V']
+    def station_qa(self):
+        return self.dataSet['STATION_QA']
     @property
-    def category_v(self):
-        return self.dataSet['CATEGORY_V']
+    def category_qa(self):
+        return self.dataSet['CATEGORY_QA']
     @property
-    def point_v(self):
-        return self.dataSet['POINT_V']
+    def point_qa(self):
+        return self.dataSet['POINT_QA']
     @property
-    def rtdbtype_v(self):
-        return self.dataSet['RTDBTYPE_V']
+    def rtdbtype_qa(self):
+        return self.dataSet['RTDBTYPE_QA']
     @property
-    def attribute_v(self):
-        return self.dataSet['ATTRIBUTE_V']
+    def attribute_qa(self):
+        return self.dataSet['ATTRIBUTE_QA']
     @property
-    def addrstring_v(self):
+    def addrstring_qa(self):
         try:
-            return ",".join([str(value) for value in self.addr_v.as_tuple()])
+            return ",".join([str(value) for value in self.addr_pa.as_tuple()])
         except:
-            return None
+            return ''
     @property
-    def v(self):
-        if self.p_v:
-            return self.p_v.read_attr(self.attribute_v)
-            
+    def qa(self):
+        if self.p_qa:
+            return round(self.p_qa.read_attr(self.attribute_qa), 6)
+        else:
+            return 0
+
+    @property
+    def station_qb(self):
+        return self.dataSet['STATION_QB']
+    @property
+    def category_qb(self):
+        return self.dataSet['CATEGORY_QB']
+    @property
+    def point_qb(self):
+        return self.dataSet['POINT_QB']
+    @property
+    def rtdbtype_qb(self):
+        return self.dataSet['RTDBTYPE_QB']
+    @property
+    def attribute_qb(self):
+        return self.dataSet['ATTRIBUTE_QB']
+    @property
+    def addrstring_qb(self):
+        try:
+            return ",".join([str(value) for value in self.addr_qb.as_tuple()])
+        except:
+            return ''
+    @property
+    def qb(self):
+        if self.p_qb:
+            return round(self.p_qb.read_attr(self.attribute_qb), 6)
+        else:
+            return 0                                    
+
+    @property
+    def station_qc(self):
+        return self.dataSet['STATION_QC']
+    @property
+    def category_qc(self):
+        return self.dataSet['CATEGORY_QC']
+    @property
+    def point_qc(self):
+        return self.dataSet['POINT_QC']
+    @property
+    def rtdbtype_qc(self):
+        return self.dataSet['RTDBTYPE_QC']
+    @property
+    def attribute_qc(self):
+        return self.dataSet['ATTRIBUTE_QC']
+    @property
+    def addrstring_qc(self):
+        try:
+            return ",".join([str(value) for value in self.addr_qc.as_tuple()])
+        except:
+            return ''
+    @property
+    def qc(self):
+        if self.p_qc:
+            return round(self.p_qc.read_attr(self.attribute_qc), 6)
+        else:
+            return 0 
+
+    @property
+    def ttu_p(self):
+        return self.pa + self.pb + self.pc
+    @property
+    def addrstring_ttu_p(self):
+        return self.addrstring_pa + self.addrstring_pb + self.addrstring_pc
+
+    @property
+    def ttu_q(self):
+        return self.qa + self.qb + self.qc
+    @property
+    def addrstring_ttu_q(self):
+        return self.addrstring_qa + self.addrstring_qb + self.addrstring_qc
+
+    @property
+    def mdms_p(self):
+        if self.dataSet['MDMS_P']:
+            return self.dataSet['MDMS_P']
+        else:
+            return 0
+    @property
+    def mdms_q(self):
+        if self.dataSet['MDMS_Q']:
+            return self.dataSet['MDMS_Q']
+        else:
+            return 0
+    
+    @property
+    def dpf_p(self):
+        if self.dataSet['DPF_P']:
+            return self.dataSet['DPF_P']
+        else:
+            return 0
+
+    @property
+    def dpf_q(self):
+        if self.dataSet['DPF_Q']:
+            return self.dataSet['DPF_Q']
+        return 0
+
     @property
     def usage_rate(self):
         if self.capacity == 0:
             return 'X'
         else:
-            if isinstance(self.p, float) and isinstance(self.q, float):
-                str(round((sqrt(pow(self.p, 2) + pow(self.q, 2)) / self.capacity) / 100, 6))
-                return str(round((sqrt(pow(self.p, 2) + pow(self.q, 2)) / self.capacity) / 100, 3)) + '%'
+            if isinstance(self.ttu_p, float) and isinstance(self.ttu_q, float):
+                str(round((sqrt(pow(self.ttu_p, 2) + pow(self.ttu_q, 2)) / self.capacity) / 100, 6))
+                return str(round((sqrt(pow(self.ttu_p, 2) + pow(self.ttu_q, 2)) / self.capacity) / 100, 3)) + '%'
             else:
                 return 'X'
     @property

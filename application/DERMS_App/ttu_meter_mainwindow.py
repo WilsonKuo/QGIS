@@ -40,11 +40,12 @@ class MainWindow(QtWidgets.QMainWindow):
         for record in TABLE.get_meter_data(self.ttu_name).resultSet:
             self.meterInfoSet.append(record)
         
-        self.lockflag1codebook = {None: 'Online', 0: 'Offline', 1: 'Online'}
-        self.lockflag2codebook = {None: 'No Data', 0: 'Stock', 1: 'Installed', 2: 'Running'}
-        self.eflagcodebook = {0: 'No Data', 1001: 'Low Potential', 1002: 'Demand Overload', 1003: 'Demand Warning', 1004: 'Demand Reset', 1011: 'Cover Open', 1012: 'Cover Close', 1021: 'Primary Power Down', 1022: 'Primary Power Down', 1031: 'Over Voltage', 1032: 'Under Voltage'}
+        # self.lockflag1codebook = {None: 'Online', 0: 'Offline', 1: 'Online'}
+        # self.lockflag2codebook = {None: 'No Data', 0: 'Stock', 1: 'Installed', 2: 'Running'}
+        # self.eflagcodebook = {0: 'No Data', 1001: 'Low Potential', 1002: 'Demand Overload', 1003: 'Demand Warning', 1004: 'Demand Reset', 1011: 'Cover Open', 1012: 'Cover Close', 1021: 'Primary Power Down', 1022: 'Primary Power Down', 1031: 'Over Voltage', 1032: 'Under Voltage'}
         #self.tablecolumns = ['METER_NAME', 'COMMUNICATION_STATUS', 'OPERATION_STATUS', 'LOAD_INFO', 'V', 'I', 'METER_EVENT']
-        self.tablecolumns = ['METER_NAME', 'OPERATION_STATUS', 'LOAD_INFO', 'V', 'I', 'METER_EVENT']
+        #self.tablecolumns = ['METER_NAME', 'OPERATION_STATUS', 'LOAD_INFO', 'V', 'I', 'METER_EVENT']
+        self.tablecolumns = ["METER_NAME", "METERUNIQUEID", "P_KWH", "P_KQH_P", "P_KQH_M", "S_KWH", "S_KQH_P", "S_KQH_M", "P_KW", "P_KQ_P", "P_KQ_M", "S_KW", "S_KQ_P", "S_KQ_M", "READINGTIME", "RECEIVETIME"]
         self.ui.resulttableWidget.setColumnCount(len(self.tablecolumns))
         self.ui.resulttableWidget.setHorizontalHeaderLabels(self.tablecolumns)
         self.data_to_gui()
@@ -85,39 +86,14 @@ class MainWindow(QtWidgets.QMainWindow):
                     newresultSet.append(meter)
 
         self.ui.resulttableWidget.setRowCount(len(newresultSet))
-        for row, meter in enumerate(newresultSet):
-            item_name = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str( meter['METER_NAME'])))
-            item_name.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 0, item_name)
-            self.ui.resulttableWidget.setColumnWidth(0, 130)
-        
-            # item_lockflag1 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.lockflag1codebook[meter.lockflag1])))
-            # item_lockflag1.setTextAlignment(QtCore.Qt.AlignCenter)
-            # item_lockflag1.setToolTip(meter.addrstring_lockflag1)
-            # self.ui.resulttableWidget.setItem(row, 1, item_lockflag1)
-            
-            item_lockflag2 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.lockflag2codebook[meter['LOCKFLAG2']])))
-            item_lockflag2.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 2 - 1, item_lockflag2)
-            self.ui.resulttableWidget.setColumnWidth(2 - 1, 180)
+        for row_num, meter in enumerate(newresultSet):
+            for col_num, colname in enumerate(self.tablecolumns):
+                item = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter[colname])))
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                self.ui.resulttableWidget.setItem(row_num, col_num, item)
+                self.ui.resulttableWidget.setColumnWidth(0, 130)
 
-            item_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter['PA'])))
-            item_p.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 3 - 1, item_p)
 
-            # item_v = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(meter.v)))
-            # item_v.setTextAlignment(QtCore.Qt.AlignCenter)
-            # item_v.setToolTip(meter.addrstring_v)
-            # self.ui.resulttableWidget.setItem(row, 4 - 1, item_v)
-
-            item_i = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(round(meter['AMPA'], 3))))
-            item_i.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 5 - 1, item_i)
-
-            item_eflag = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(self.eflagcodebook[meter['EFLAG']])))
-            item_eflag.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 6 - 1, item_eflag)
-            self.ui.resulttableWidget.setColumnWidth(6 - 1, 200)
 
     def closeEvent(self, event):
         print('Save setting')
