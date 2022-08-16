@@ -126,7 +126,7 @@ class TTU_TABLE_SCHEMA:
         columns = ['NAME']
         query   = "SELECT FEEDER1 FROM TB_TP WHERE NAME = '{0}' UNION SELECT FEEDER2 FROM TB_TP WHERE NAME = '{0}'".format(obj_name)
         result  = "','".join([feeder[0] for feeder in PRISMdb.ExecQuery(query) if feeder[0]])
-        query   = "SELECT {0} FROM TB_TP WHERE FEEDER1 IN ('{1}') OR FEEDER2 IN ('{1}')".format(",".join(columns), result)
+        query   = "SELECT {0} FROM TB_TP WHERE (FEEDER1 IN ('{1}') OR FEEDER2 IN ('{1}')) AND FSC = 115".format(",".join(columns), result)
         result  = PRISMdb.ExecQuery(query)
         resultSet = [ row[0] for row in result ]
         return cls(columns, resultSet)
@@ -139,7 +139,6 @@ class TTU_TABLE_SCHEMA:
         result = "','".join([feeder[0] for feeder in PRISMdb.ExecQuery(query) if feeder[0]])
         query = """SELECT {0} FROM {1}_{2}{3} WHERE NAME IN (SELECT NAME FROM TB_TP WHERE FEEDER1 IN ('{4}') OR FEEDER2 IN ('{4}'))
                    AND DAY = {5} AND HOUR = {6} AND MINUTE = {7}""".format(",".join(columns), tablename, month, year, result, day, hour, minute)
-        print(query)
         result  = PRISMdb.ExecQuery(query)
         resultSet = [ dict(zip(columns, row)) for row in result ]
         return cls(columns, resultSet)

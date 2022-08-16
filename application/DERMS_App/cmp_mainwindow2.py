@@ -57,6 +57,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ui.resulttableWidget.setHorizontalHeaderLabels(self.tablecolumns)
         self.ui.pushButton.clicked.connect(self.data_to_gui)
         locale.setlocale(locale.LC_ALL, "C")
+        self.ui.dateTimeEdit.setDateTime(datetime.datetime.now())
 
 
     def data_to_gui(self):

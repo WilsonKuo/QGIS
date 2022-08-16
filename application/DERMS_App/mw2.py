@@ -259,7 +259,7 @@ class Ui_MainWindow(object):
         self.ttucheckBox1.setText(_translate("MainWindow", "Terminal Transformer Unit"))
         self.dpfcheckBox1.setText(_translate("MainWindow", "Distribution Power Flow"))
         self.label.setText(_translate("MainWindow", "Ratio Setting"))
-        self.label_4.setText(_translate("MainWindow", "CMP1"))
+        self.label_4.setText(_translate("MainWindow", "CMP2"))
         self.label_5.setText(_translate("MainWindow", "Table Name"))
         self.mdmscheckBox2.setText(_translate("MainWindow", "Meter Data Management System"))
         self.ttucheckBox2.setText(_translate("MainWindow", "Terminal Transformer Unit"))
