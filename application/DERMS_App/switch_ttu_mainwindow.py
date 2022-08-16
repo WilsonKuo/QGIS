@@ -68,8 +68,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.ttudisplaynumberdict = dict()
         for ttu in self.ttuinfoSet:
             self.ttudisplaynumberdict[ttu.name] = ttu.display_number
-        self.tablecolumns = ['TTU_NAME', 'DISPLAY_NUMBER', 'COMPARE_P', 'COMPARE_Q', 'TTU_P', 'TTU_Q', 'DPF_P', 'DPF_Q', 'MDMS_P', 'MDMS_Q', 'CAPACITY', 'USAGE_RATE', 'FLAG1', 'FLAG2', 'FLAG3', 'FLAG4']
-        #self.tablecolumns = ['TTU_NAME', 'DISPLAY_NUMBER', 'P', 'Q', 'V', 'CAPACITY', 'USAGE_RATE', 'FLAG1', 'FLAG2', 'FLAG3', 'FLAG4']
+        #self.tablecolumns = ['TTU_NAME', 'DISPLAY_NUMBER', 'COMPARE_P', 'COMPARE_Q', 'TTU_P', 'TTU_Q', 'DPF_P', 'DPF_Q', 'MDMS_P', 'MDMS_Q', 'CAPACITY', 'USAGE_RATE', 'FLAG1', 'FLAG2', 'FLAG3', 'FLAG4']
+        self.tablecolumns = ['TTU_NAME', 'DISPLAY_NUMBER', 'TTU_P', 'TTU_Q', 'CAPACITY', 'USAGE_RATE', 'FLAG1', 'FLAG2', 'FLAG3', 'FLAG4']
         self.ui.resulttableWidget.setColumnCount(len(self.tablecolumns))
         self.ui.resulttableWidget.setHorizontalHeaderLabels(self.tablecolumns)
         self.qTimer = QTimer()
@@ -104,55 +104,55 @@ class MainWindow(QtWidgets.QMainWindow):
             self.ui.resulttableWidget.setItem(row, 1, item_display_number)
             self.ui.resulttableWidget.setColumnWidth(1,150)
 
-            if (ttu.ttu_p * TTU_RATIO + ttu.dpf_p * DPF_RATIO) < ttu.mdms_p:
-                item_compare_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(1)))
-            else:
-                item_compare_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(0)))
-            item_compare_p.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_compare_p.setToolTip(ttu.addrstring_ttu_p)
-            self.ui.resulttableWidget.setItem(row, 2, item_compare_p)
+            # if (ttu.ttu_p * TTU_RATIO + ttu.dpf_p * DPF_RATIO) < ttu.mdms_p:
+            #     item_compare_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(1)))
+            # else:
+            #     item_compare_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(0)))
+            # item_compare_p.setTextAlignment(QtCore.Qt.AlignCenter)
+            # item_compare_p.setToolTip(ttu.addrstring_ttu_p)
+            # self.ui.resulttableWidget.setItem(row, 2, item_compare_p)
 
-            if (ttu.ttu_q * TTU_RATIO + ttu.dpf_q * DPF_RATIO) < ttu.mdms_q:
-                item_compare_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(1)))
-            else:
-                item_compare_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(0)))
-            item_compare_q.setTextAlignment(QtCore.Qt.AlignCenter)
-            item_compare_q.setToolTip(ttu.addrstring_ttu_q)
-            self.ui.resulttableWidget.setItem(row, 3, item_compare_q)
+            # if (ttu.ttu_q * TTU_RATIO + ttu.dpf_q * DPF_RATIO) < ttu.mdms_q:
+            #     item_compare_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(1)))
+            # else:
+            #     item_compare_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(0)))
+            # item_compare_q.setTextAlignment(QtCore.Qt.AlignCenter)
+            # item_compare_q.setToolTip(ttu.addrstring_ttu_q)
+            # self.ui.resulttableWidget.setItem(row, 3, item_compare_q)
 
             item_ttu_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.ttu_p)))
             item_ttu_p.setTextAlignment(QtCore.Qt.AlignCenter)
             item_ttu_p.setToolTip(ttu.addrstring_ttu_p)
-            self.ui.resulttableWidget.setItem(row, 4, item_ttu_p)
+            self.ui.resulttableWidget.setItem(row, 2, item_ttu_p)
 
             item_ttu_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.ttu_q)))
             item_ttu_q.setTextAlignment(QtCore.Qt.AlignCenter)
             item_ttu_q.setToolTip(ttu.addrstring_ttu_q)
-            self.ui.resulttableWidget.setItem(row, 5, item_ttu_q)
+            self.ui.resulttableWidget.setItem(row, 3, item_ttu_q)
 
-            item_dpf_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.dpf_p)))
-            item_dpf_p.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 6, item_dpf_p)
+            # item_dpf_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.dpf_p)))
+            # item_dpf_p.setTextAlignment(QtCore.Qt.AlignCenter)
+            # self.ui.resulttableWidget.setItem(row, 6, item_dpf_p)
 
-            item_dpf_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.dpf_q)))
-            item_dpf_q.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 7, item_dpf_q)
+            # item_dpf_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.dpf_q)))
+            # item_dpf_q.setTextAlignment(QtCore.Qt.AlignCenter)
+            # self.ui.resulttableWidget.setItem(row, 7, item_dpf_q)
 
-            item_mdms_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.mdms_p)))
-            item_mdms_p.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 8, item_mdms_p)
+            # item_mdms_p = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.mdms_p)))
+            # item_mdms_p.setTextAlignment(QtCore.Qt.AlignCenter)
+            # self.ui.resulttableWidget.setItem(row, 8, item_mdms_p)
 
-            item_mdms_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.mdms_q)))
-            item_mdms_q.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 9, item_mdms_q)
+            # item_mdms_q = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.mdms_q)))
+            # item_mdms_q.setTextAlignment(QtCore.Qt.AlignCenter)
+            # self.ui.resulttableWidget.setItem(row, 9, item_mdms_q)
 
             item_capacity = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.capacity)))
             item_capacity.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 10, item_capacity)
+            self.ui.resulttableWidget.setItem(row, 4, item_capacity)
 
             item_usage_rate = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.usage_rate)))
             item_usage_rate.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.ui.resulttableWidget.setItem(row, 11, item_usage_rate)
+            self.ui.resulttableWidget.setItem(row, 5, item_usage_rate)
 
             #QtCore.Qt.DecorationRole
             # item_flag1 = RadioButton(ttu.flag1).widgets
@@ -160,28 +160,28 @@ class MainWindow(QtWidgets.QMainWindow):
             item_flag1 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(str(ttu.flag1)))
             item_flag1.setTextAlignment(QtCore.Qt.AlignCenter)
             item_flag1.setToolTip(ttu.addrstring_flag1)
-            self.ui.resulttableWidget.setItem(row, 12, item_flag1)
+            self.ui.resulttableWidget.setItem(row, 6, item_flag1)
 
             # item_flag2 = RadioButton(ttu.flag2).widgets
             # self.ui.resulttableWidget.setCellWidget(row, 9, item_flag2)
             item_flag2 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(self.flag2codebook[ttu.flag2]))
             item_flag2.setTextAlignment(QtCore.Qt.AlignCenter)
             item_flag2.setToolTip(ttu.addrstring_flag2)
-            self.ui.resulttableWidget.setItem(row, 13, item_flag2)
+            self.ui.resulttableWidget.setItem(row, 7, item_flag2)
 
             # item_flag3 = RadioButton(ttu.flag3).widgets
             # self.ui.resulttableWidget.setCellWidget(row, 10, item_flag3)
             item_flag3 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(self.flag3codebook[ttu.flag3]))
             item_flag3.setTextAlignment(QtCore.Qt.AlignCenter)
             item_flag3.setToolTip(ttu.addrstring_flag3)
-            self.ui.resulttableWidget.setItem(row, 14, item_flag3)
+            self.ui.resulttableWidget.setItem(row, 8, item_flag3)
 
             # item_flag4 = RadioButton(ttu.flag4).widgets
             # self.ui.resulttableWidget.setCellWidget(row, 10, item_flag4)
             item_flag4 = QtWidgets.QTableWidgetItem(QtWidgets.QTableWidgetItem(self.flag4codebook[ttu.flag4]))
             item_flag4.setTextAlignment(QtCore.Qt.AlignCenter)
             item_flag4.setToolTip(ttu.addrstring_flag4)
-            self.ui.resulttableWidget.setItem(row, 15, item_flag4)
+            self.ui.resulttableWidget.setItem(row, 9, item_flag4)
 
             if 'BKG' + str(self.ttudisplaynumberdict[ttu.name]) + '.M' in self.existfile:
                 for col in range(0,2):

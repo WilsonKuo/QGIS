@@ -28,7 +28,6 @@ class Equipment(object, metaclass = NewInitCaller):
             self.addr_stastatus.analysis_mode = self.analysis_mode
             self.p_stastatus = RtdbPoint(self.addr_stastatus)
         except Exception as e:
-            print(e)
             self.p_stastatus = None
         # for not line tmp
         self.__colorcode = None
