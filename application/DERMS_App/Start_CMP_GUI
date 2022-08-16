@@ -1,0 +1,66 @@
+#!/bin/python3.6
+# coding=utf-8
+"""
+:Copyright: © 2021 Advanced Control Systems, Inc. All Rights Reserved.
+"""
+# System
+import os
+import sys
+import argparse
+from PyQt5 import QtWidgets
+
+# Non-System
+from acstw.OracleInterface import OracleInterface
+from acsprism import RtdbAddress,RtdbPoint, rtdb_init
+
+__author__ = 'Wilson Kuo'
+
+
+
+def get_parser():
+    """ The argument parser of the command-line version """
+    parser = argparse.ArgumentParser(description="Convert Center")
+    #group = parser.add_mutually_exclusive_group()
+    parser.add_argument("-Type", help="Type") 
+    parser.add_argument("-Site", help="Site") 
+    parser.add_argument("-Station", help="Station") 
+    parser.add_argument("-Cat", help="Cat") 
+    parser.add_argument("-Point", help="Point") 
+    parser.add_argument("-Value", help="Value") 
+    parser.add_argument("-AMode", help="AMode") 
+    parser.add_argument("-DMode", help="DMode") 
+    parser.add_argument("-TName", help="TName") 
+    parser.add_argument("-SNum", help="SNum") 
+    parser.add_argument("-User", help="User") 
+    parser.add_argument("-Device", help="Device") 
+    
+    return parser
+
+def main():
+    rtdb_init()
+    app = QtWidgets.QApplication(sys.argv)
+    parser = get_parser()
+    args, unknown = parser.parse_known_args()
+    # print(args.Type)
+    # print(args.Site)
+    # print(args.Station)
+    # print(args.Cat)
+    # print(args.Point)
+    # print(args.Value)
+    # print(args.AMode)
+    # print(args.DMode)
+    print(args.TName)
+    if args.TName in ('BREAKER','SWITCH', 'SXFMR'):
+        from cmp_mainwindow2 import MainWindow
+    else:
+        return 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+
+    # print(args.User)
+    # print(args.Device)
+
+    ui.show()
+    sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    main()

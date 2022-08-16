@@ -73,13 +73,13 @@ class Topology:
 
         columns  = ["UFID", "FRNODEID", "TONODEID", "FSC", "NAME", "COLORCODE"]
         columns += ["STATION", "CATEGORY", "POINT", "RTDBTYPE", "ATTRIBUTE" ]
-        query   = "SELECT {0} FROM  VIEW_TB_TP_XREF WHERE NAME IN (SELECT BRKNAME FROM FEEDER WHERE FDTYPE = 0) AND FSC = 108 ORDER BY NAME".format(",".join(columns))
+        query   = "SELECT {0} FROM  VIEW_TB_TP_XREF WHERE NAME IN (SELECT NAME FROM SWITCHPARAM WHERE DEVTYPE = 4) AND FSC = 108 ORDER BY NAME".format(",".join(columns))
         sources = PRISMdb.ExecQuery(query)
         sources = [ dict(zip(columns, row)) for row in sources ]
         
         columns  = ["UFID", "FRNODEID", "TONODEID", "FSC", "NAME"]
         columns += ["STATION", "CATEGORY", "POINT", "RTDBTYPE", "ATTRIBUTE" ]
-        query   = "SELECT {0} FROM  VIEW_TB_TP_XREF  WHERE NAME NOT IN (SELECT BRKNAME FROM FEEDER WHERE FDTYPE = 0)".format(",".join(columns))
+        query   = "SELECT {0} FROM  VIEW_TB_TP_XREF  WHERE NAME NOT IN (SELECT NAME FROM SWITCHPARAM WHERE DEVTYPE >= 4)".format(",".join(columns))
         equipments = PRISMdb.ExecQuery(query)
         equipments = [ dict(zip(columns, row)) for row in equipments ]
 
