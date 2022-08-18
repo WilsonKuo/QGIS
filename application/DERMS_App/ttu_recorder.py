@@ -68,9 +68,9 @@ def main():
                                 SELECT TPCID||LOOPID NAME, CURVALUE FROM INTF_FCI_TTU_DATA 
                                 WHERE COLNAME = '{0}' AND 
                                 READINGTIME BETWEEN 
-                                    TO_DATE('{1} {hh:02d}:{m1:02d}:00', 'DD/MM/YYYY HH24:MI:SS') 
+                                    TO_DATE('{1} {hh:02d}:{m1:02d}:00', 'MM/DD/YYYY HH24:MI:SS') 
                                     AND
-                                    TO_DATE('{1} {hh:02d}:{m2:02d}:59', 'DD/MM/YYYY HH24:MI:SS') 
+                                    TO_DATE('{1} {hh:02d}:{m2:02d}:59', 'MM/DD/YYYY HH24:MI:SS') 
                             ) {0} 
                             ON LP.NAME = {0}.NAME
                         """.format(column, ttuprevioustimestamp, hh = hour, m1 = minute, m2 = minute + 14)

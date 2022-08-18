@@ -61,7 +61,7 @@ class TTU_TABLE_SCHEMA:
         columns += ['STATION_FLAG3', 'CATEGORY_FLAG3', 'POINT_FLAG3', 'RTDBTYPE_FLAG3', 'ATTRIBUTE_FLAG3']
         columns += ['STATION_FLAG4', 'CATEGORY_FLAG4', 'POINT_FLAG4', 'RTDBTYPE_FLAG4', 'ATTRIBUTE_FLAG4']
         if switch_name:
-            query = """SELECT {0} FROM TTUINFO WHERE TTU_NAME IN (SELECT NAME FROM TB_TP WHERE (FEEDER1_NONLINEPARENT = '{1}' OR FEEDER2_NONLINEPARENT = '{1}') AND FSC = 115)""".format(",".join(columns), switch_name)
+            query = """SELECT {0} FROM TTUINFO WHERE TTU_NAME IN (SELECT NAME FROM TB_TP WHERE (FEEDER1_NONLINEPARENT = '{1}' OR FEEDER2_NONLINEPARENT = '{1}'))""".format(",".join(columns), switch_name)
         else:
             query = """SELECT {0} FROM TTUINFO""".format(",".join(columns))
         result  = PRISMdb.ExecQuery(query)

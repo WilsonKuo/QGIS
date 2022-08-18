@@ -70,9 +70,9 @@ def main():
                                    FROM INTF_MDMS_DATA IMD, TTU_METER TM
                             WHERE TM.METER_NAME = IMD.METER AND 
                                 READINGTIME BETWEEN 
-                                TO_DATE('{0} {hh:02d}:{m1:02d}:00', 'DD/MM/YYYY HH24:MI:SS') 
+                                TO_DATE('{0} {hh:02d}:{m1:02d}:00', 'MM/DD/YYYY HH24:MI:SS') 
                                 AND
-                                TO_DATE('{0} {hh:02d}:{m2:02d}:59', 'DD/MM/YYYY HH24:MI:SS') 
+                                TO_DATE('{0} {hh:02d}:{m2:02d}:59', 'MM/DD/YYYY HH24:MI:SS') 
                             GROUP BY TM.TTU_NAME
                         ) T
                         ON LP.NAME = T.TTU_NAME

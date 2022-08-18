@@ -33,7 +33,7 @@ def main():
 
 
     #######################
-    # os.system("/home/acs/bin/dpf")
+    os.system("/home/acs/bin/dpf > /home/acs/tmp/dpf.out")
     #######################
 
 

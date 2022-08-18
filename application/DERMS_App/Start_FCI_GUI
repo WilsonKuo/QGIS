@@ -50,7 +50,7 @@ def main():
     # print(args.AMode)
     # print(args.DMode)
     print(args.TName)
-    if args.TName in ('BREAKER','SWITCH', ''SXFMR''):
+    if args.TName in ('BREAKER','SWITCH', 'SXFMR'):
         from fci_mainwindow import MainWindow
     else:
         return 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'

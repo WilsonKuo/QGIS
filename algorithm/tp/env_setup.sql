@@ -20,7 +20,7 @@ SELECT
 LINE.IDX + 4000000 UFID, 106 FSC, LINE.NAME, LINE.FRNODEIDX FRNODEID, LINE.TONODEIDX TONODEID, OX.STATION, OX.CATEGORY, OX.POINT, DECODE(OX.RTDBTYPE,1,'S',2,'T') RTDBTYPE, OX.ATTRIBUTE, NULL COLORCODE
 FROM (SELECT * FROM LINEPARAM) LINE
 LEFT JOIN OUTPUTXREF OX ON OX.KEYIDX = LINE.IDX
-WHERE TABLENAME = 'LINEOUTPUT' AND COLNAME = 'COLORCODE';
+WHERE TABLENAME = 'LINEOUTPUT' AND COLNAME = 'COLORCODE'
 
 --  drop table testtable;
 --  drop table feeder;
@@ -40,22 +40,24 @@ WHERE TABLENAME = 'LINEOUTPUT' AND COLNAME = 'COLORCODE';
 --                         point =   (select point from outputxref b, lineparam c where b.keyidx = c.idx and b.tablename='LINEOUTPUT' and b.colname='COLORCODE' and a.name=c.name)
 --  where a.fsc in (106) and name in (select name from lineparam);
 
-drop table tb_tp;
-create table tb_tp
+DROP TABLE TB_TP;
+CREATE TABLE TB_TP
 (
-    ufid number(11),
-    fsc number(5),
-    name varchar2(19),
-    status number(3),
-    feeder1 varchar2(19),
-    feeder1_nonlineparent varchar2(19),
-    feeder1_parent varchar2(19),
-    feeder2 varchar2(19),
-    feeder2_nonlineparent varchar2(19),
-    feeder2_parent varchar2(19),
-    flag number(1)
+    UFID NUMBER(11),
+    FSC NUMBER(5),
+    NAME VARCHAR2(19),
+    STATUS NUMBER(3),
+    FEEDER1 VARCHAR2(19),
+    FEEDER1_NONLINEPARENT VARCHAR2(19),
+    FEEDER1_PARENT VARCHAR2(19),
+    FEEDER2 VARCHAR2(19),
+    FEEDER2_NONLINEPARENT VARCHAR2(19),
+    FEEDER2_PARENT VARCHAR2(19),
+    FLAG NUMBER(1)
 );
-create index tb_tp_ufid_idx on tb_tp (ufid);
+CREATE INDEX TB_TP_UFID_IDX ON TB_TP (UFID);
+CREATE INDEX IDX_TB_TP_FD1_NONLINEPARENT ON TB_TP(FEEDER1_NONLINEPARENT);
+CREATE INDEX IDX_TB_TP_FD2_NONLINEPARENT ON TB_TP(FEEDER2_NONLINEPARENT);
 
-exit;
+EXIT;
 

@@ -181,12 +181,17 @@ class Topology:
                                 # meet load or capacitor
                                 pass
                             else:
-                                if equipment.fsc in (108, 114):
-                                    inNONLINEUFID = equipment.ufid
                                 if fromto == 0:
-                                    self.trace(equipmentufid, equipment.tonodeid, source.ufid, inNONLINEUFID)
+                                    if equipment.fsc in (108, 114):
+                                        self.trace(equipmentufid, equipment.tonodeid, source.ufid, equipment.ufid)
+                                    else:
+                                        self.trace(equipmentufid, equipment.tonodeid, source.ufid, inNONLINEUFID)
+                                    
                                 else:
-                                    self.trace(equipmentufid, equipment.frnodeid, source.ufid, inNONLINEUFID)
+                                    if equipment.fsc in (108, 114):
+                                        self.trace(equipmentufid, equipment.frnodeid, source.ufid, equipment.ufid)
+                                    else:
+                                        self.trace(equipmentufid, equipment.frnodeid, source.ufid, inNONLINEUFID)
                     else:
                         ###################prevent back trace at source
                         if inEQUIPMENTUFID != source.ufid:
